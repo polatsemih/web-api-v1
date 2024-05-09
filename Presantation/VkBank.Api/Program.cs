@@ -7,6 +7,12 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
+var env = builder.Environment; // launchSettings.json "ASPNETCORE_ENVIRONMENT" => `Development` || `Production`
+builder.Configuration
+    .SetBasePath(env.ContentRootPath) // setting local or server path dynamically => `C:\Users\SUP\Desktop\src\VkBank\Presantation\VkBank.Api`
+    .AddJsonFile("appsettings.json", optional: false)
+    .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
+
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.
