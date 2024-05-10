@@ -6,7 +6,8 @@ using System.Threading.Tasks;
 
 namespace VkBank.Domain.Common
 {
-    public interface IEntityBase
+    [AttributeUsage(AttributeTargets.Property | AttributeTargets.Field, AllowMultiple = true)]
+    public class DapperIgnoreAttribute : Attribute
     {
 
     }
