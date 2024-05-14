@@ -8,11 +8,8 @@ namespace VkBank.Domain.Contstants
 {
     public class LengthLimits
     {
+        //Menu
         public const int MenuNameMinLength = 3;
         public const int MenuNameMaxLength = 255;
-
-
-
-        public static readonly string MenuNameMaxLength3 = MenuNameMaxLength.ToString();
     }
 }

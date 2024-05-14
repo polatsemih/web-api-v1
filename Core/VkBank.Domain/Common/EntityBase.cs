@@ -11,21 +11,21 @@ namespace VkBank.Domain.Common
         /// <summary>
         /// Unique Identifier number for each all entities
         /// </summary>
-        public required int Id { get; set; }
+        public long Id { get; set; }
 
         /// <summary>
         /// Indicates whether the entity is active
         /// </summary>
-        public required bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; } = true;
 
         /// <summary>
         /// The date and time when the entity was created
         /// </summary>
-        public required DateTime CreatedDate { get; set; }
+        public DateTime CreatedDate { get; set; }
 
         /// <summary>
         /// The date and time when the entity was last modified
         /// </summary>
-        public required DateTime LastModifiedDate { get; set; }
+        public DateTime LastModifiedDate { get; set; }
     }
 }

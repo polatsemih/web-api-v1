@@ -9,10 +9,10 @@ namespace VkBank.Application.Interfaces.Repositories
 {
     public interface IGenericRepository<T> where T : EntityBase
     {
+        List<T> GetAll();
+        T GetById(long id);
         void Add(T entity);
         void Update(T entity);
-        void Delete(int id);
-        List<T> GetAll();
-        T GetById(int id);
+        void Delete(T entity);
     }
 }
