@@ -7,13 +7,13 @@ using System.Threading.Tasks;
 using VkBank.Application.Validations.Common;
 using VkBank.Domain.Entities;
 
-namespace VkBank.Application.Validations.Create
+namespace VkBank.Application.Validations.Delete
 {
-    public class CreateMenuValidator : AbstractValidator<Menu>
+    public class DeleteMenuValidator : AbstractValidator<Menu>
     {
-        public CreateMenuValidator()
+        public DeleteMenuValidator()
         {
-            RuleFor(m => m.Name).ValidateMenuName();
+            RuleFor(m => m.Id).ValidateMenuId();
         }
     }
 }

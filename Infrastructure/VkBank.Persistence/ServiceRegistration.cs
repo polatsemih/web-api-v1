@@ -1,12 +1,22 @@
-﻿using System;
+﻿using Microsoft.Extensions.DependencyInjection;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using VkBank.Application.Interfaces.Context;
+using VkBank.Application.Interfaces.Repositories;
+using VkBank.Persistence.Context;
+using VkBank.Persistence.Repositories;
 
 namespace VkBank.Persistence
 {
-    public class ServiceRegistration
+    public static class ServiceRegistration
     {
+        public static void AddPersistenceDependencies(this IServiceCollection services)
+        {
+            services.AddScoped<IMenuRepository, DapperMenuRepository>();
+            services.AddScoped<IDapperContext, DapperContext>();
+        }
     }
 }

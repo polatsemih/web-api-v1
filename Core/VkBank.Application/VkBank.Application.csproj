@@ -7,7 +7,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AutoMapper" Version="13.0.1" />
     <PackageReference Include="FluentValidation" Version="11.9.1" />
+    <PackageReference Include="FluentValidation.DependencyInjectionExtensions" Version="11.9.1" />
     <PackageReference Include="MediatR" Version="12.2.0" />
     <PackageReference Include="Microsoft.Data.SqlClient" Version="5.2.0" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
@@ -15,15 +17,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\VkBank.Domain\VkBank.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Features\Commands\CreateEvent\" />
-    <Folder Include="Features\Commands\DeleteEvent\" />
-    <Folder Include="Features\Commands\UpdateEvent\" />
-    <Folder Include="Features\Queries\GetEvent\" />
-    <Folder Include="Validations\Delete\" />
-    <Folder Include="Validations\Update\" />
   </ItemGroup>
 
 </Project>

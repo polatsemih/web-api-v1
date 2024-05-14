@@ -18,46 +18,54 @@ namespace VkBank.Domain.Entities
         /// <summary>
         /// Name of the menu item
         /// </summary>
-        public required string Name { get; set; }
+        public string? Name { get; set; }
 
         /// <summary>
         /// Screen code associated with the menu item. Must start with 10000.
         /// </summary>
-        public required uint ScreenCode { get; set; }
+        public uint ScreenCode { get; set; }
 
         /// <summary>
         /// Type of the menu item (e.g., home menu = 1, profile menu = 2)
         /// </summary>
-        public required byte Type { get; set; }
+        public byte Type { get; set; }
 
         /// <summary>
         /// Priority of the menu item for ordering purposes
         /// </summary>
-        public required byte Priority { get; set; }
+        public byte Priority { get; set; }
 
         /// <summary>
         /// Keyword associated with the menu item for searching
         /// </summary>
-        public required string Keyword { get; set; }
+        public string? Keyword { get; set; }
 
         /// <summary>
         /// Path to the icon associated with the menu item
         /// </summary>
-        public required string IconPath { get; set; }
+        public string? IconPath { get; set; }
 
         /// <summary>
         /// Indicates whether the menu item is new
         /// </summary>
-        public required bool IsNew { get; set; }
+        public bool IsNew { get; set; }
 
         /// <summary>
         /// Start date for the new menu item
         /// </summary>
-        public required DateTime NewStartDate { get; set; }
+        public DateTime NewStartDate { get; set; }
 
         /// <summary>
         /// End date for the new menu item
         /// </summary>
-        public required DateTime NewEndDate { get; set; }
+        public DateTime NewEndDate { get; set; }
+
+
+
+
+
+        //Navigation property
+        //[DapperIgnore]
+        //public ICollection<Product> Products { get; set; }
     }
 }

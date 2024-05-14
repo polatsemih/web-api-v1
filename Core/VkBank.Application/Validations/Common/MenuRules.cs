@@ -11,12 +11,18 @@ namespace VkBank.Application.Validations.Common
 {
     public static class MenuRules
     {
-        public static IRuleBuilderOptions<T, string> CheckMenuName<T>(this IRuleBuilder<T, string> ruleBuilder) where T : Menu
+
+        public static IRuleBuilderOptions<T, long> ValidateMenuId<T>(this IRuleBuilder<T, long> ruleBuilder) where T : Menu
+        {
+            return ruleBuilder.NotEmpty().WithMessage(ValidationMessages.MenuIdEmpty);
+        }
+
+        public static IRuleBuilderOptions<T, string> ValidateMenuName<T>(this IRuleBuilder<T, string> ruleBuilder) where T : Menu
         {
             return ruleBuilder
-                .NotEmpty().WithMessage(ValidationMessages.MenuNameEmptyError)
-                .MinimumLength(LengthLimits.MenuNameMinLength).WithMessage(ValidationMessages.MenuNameMinLengthError)
-                .MaximumLength(LengthLimits.MenuNameMaxLength).WithMessage(ValidationMessages.MenuNameMaxLengthError);
+                .NotEmpty().WithMessage(ValidationMessages.MenuNameEmpty)
+                .MinimumLength(LengthLimits.MenuNameMinLength).WithMessage(ValidationMessages.MenuNameMinLength)
+                .MaximumLength(LengthLimits.MenuNameMaxLength).WithMessage(ValidationMessages.MenuNameMaxLength);
         }
     }
 }
