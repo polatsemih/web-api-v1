@@ -14,7 +14,9 @@ namespace VkBank.Application.Validations.Update
         public UpdateMenuValidator()
         {
             RuleFor(m => m.Id).ValidateMenuId();
-            RuleFor(m => m.Name).ValidateMenuName();
+            RuleFor(m => m.Name_TR).ValidateMenuName();
+            RuleFor(m => m.Name_EN).ValidateMenuName();
+            RuleFor(m => m.Keyword).ValidateMenuKeyword();
         }
     }
 }

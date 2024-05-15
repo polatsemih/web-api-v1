@@ -15,7 +15,7 @@ namespace VkBank.Application.Features.Commands.DeleteEvent
 {
     public class DeleteMenuCommandRequest : IRequest<IResult>
     {
-        public int Id { get; set; }
+        public long Id { get; set; }
     }
 
     public class DeleteMenuCommandHandler : IRequestHandler<DeleteMenuCommandRequest, IResult>
@@ -34,6 +34,7 @@ namespace VkBank.Application.Features.Commands.DeleteEvent
         public Task<IResult> Handle(DeleteMenuCommandRequest request, CancellationToken cancellationToken)
         {
             Menu menu = _mapper.Map<Menu>(request);
+
             var result = _validator.ValidateAsync(menu, cancellationToken);
             if (result.IsCompletedSuccessfully)
             {

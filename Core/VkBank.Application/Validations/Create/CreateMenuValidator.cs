@@ -13,7 +13,10 @@ namespace VkBank.Application.Validations.Create
     {
         public CreateMenuValidator()
         {
-            RuleFor(m => m.Name).ValidateMenuName();
+            RuleFor(m => m.ParentId).ValidateMenuParentId();
+            RuleFor(m => m.Name_TR).ValidateMenuName();
+            RuleFor(m => m.Name_EN).ValidateMenuName();
+            RuleFor(m => m.Keyword).ValidateMenuKeyword();
         }
     }
 }

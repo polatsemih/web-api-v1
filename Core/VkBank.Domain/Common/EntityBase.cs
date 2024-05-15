@@ -16,7 +16,7 @@ namespace VkBank.Domain.Common
         /// <summary>
         /// Indicates whether the entity is active
         /// </summary>
-        public bool IsActive { get; set; } = true;
+        public bool IsActive { get; set; }
 
         /// <summary>
         /// The date and time when the entity was created
