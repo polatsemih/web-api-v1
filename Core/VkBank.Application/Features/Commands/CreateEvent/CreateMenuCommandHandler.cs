@@ -16,16 +16,19 @@ namespace VkBank.Application.Features.Commands.CreateEvent
 {
     public class CreateMenuCommandRequest : IRequest<IResult>
     {
-        public ushort? ParentId { get; set; }
-        public string? Name { get; set; }
-        public byte Type { get; set; }
-        public byte Priority { get; set; }
-        public string? Keyword { get; set; }
-        public string? IconPath { get; set; }
-        public bool IsNew { get; set; }
-        public DateTime NewStartDate { get; set; }
-        public DateTime NewEndDate { get; set; }
-        public bool IsActive { get; set; }
+        public long? ParentId { get; set; }
+        public required string Name_TR { get; set; }
+        public required string Name_EN { get; set; }
+        public required byte Type { get; set; }
+        public required byte Priority { get; set; }
+        public required string Keyword { get; set; }
+        public byte? Icon { get; set; }
+        public bool IsGroup { get; set; } = false;
+        public bool IsNew { get; set; } = true;
+        public DateTime NewStartDate { get; set; } = DateTime.Now;
+        public DateTime NewEndDate { get; set; } = DateTime.Now.AddDays(7);
+        public bool IsActive { get; set; } = true;
+        public int MyProperty { get; set; }
     }
 
     public class CreateMenuCommandHandler : IRequestHandler<CreateMenuCommandRequest, IResult>

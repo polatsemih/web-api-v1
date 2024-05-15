@@ -10,6 +10,11 @@ namespace VkBank.Domain.Contstants
     {
         //Menu
         public const int MenuNameMinLength = 3;
-        public const int MenuNameMaxLength = 255;
+        public const int MenuNameMaxLength = 500;
+        public const int MenuKeywordMinLength = 3;
+        public const int MenuKeywordMaxLength = 500;
+
+        public const int MenuTypeMinRange = 1;
+        public const int MenuTypeMaxRange = 255;
     }
 }
