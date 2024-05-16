@@ -10,7 +10,7 @@ namespace VkBank.Domain.Entities
         /// <summary>
         /// Identifier of the parent menu item. NULL if it is the parent menu item.
         /// </summary>
-        public long? ParentId { get; set; }
+        public long ParentId { get; set; }
 
         /// <summary>
         /// Turkish name of the menu item
@@ -20,7 +20,7 @@ namespace VkBank.Domain.Entities
         /// <summary>
         /// English name of the menu item
         /// </summary>
-        public required string Name_EN { get; set; }
+        public string Name_EN { get; set; }
 
         /// <summary>
         /// Screen code associated with the menu item. Must start with 10000.
@@ -30,22 +30,22 @@ namespace VkBank.Domain.Entities
         /// <summary>
         /// Type of the menu item (e.g., my profile menu = 10, my world menu = 20, all transactions = 30)
         /// </summary>
-        public required byte Type { get; set; }
+        public byte Type { get; set; }
 
         /// <summary>
         /// Priority of the menu item for ordering purposes
         /// </summary>
-        public int? Priority { get; set; }
+        public int Priority { get; set; }
 
         /// <summary>
         /// Keyword associated with the menu item for searching
         /// </summary>
-        public required string Keyword { get; set; }
+        public string Keyword { get; set; }
 
         /// <summary>
         /// Path to the icon associated with the menu item
         /// </summary>
-        public byte? Icon { get; set; }
+        public string? Icon { get; set; }
 
         /// <summary>
         /// Indicates whether the menu item is a group
@@ -60,11 +60,11 @@ namespace VkBank.Domain.Entities
         /// <summary>
         /// Start date for the new menu item
         /// </summary>
-        public DateTime NewStartDate { get; set; }
+        public DateTime? NewStartDate { get; set; }
 
         /// <summary>
         /// End date for the new menu item
         /// </summary>
-        public DateTime NewEndDate { get; set; }
+        public DateTime? NewEndDate { get; set; }
     }
 }

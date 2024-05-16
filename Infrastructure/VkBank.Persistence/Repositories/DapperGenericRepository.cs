@@ -28,9 +28,7 @@ namespace VkBank.Persistence.Repositories
         {
             return typeof(T)
                 .GetProperties()
-                .Where(e => e.Name != "Id"
-                && !e.PropertyType.GetTypeInfo().IsGenericType
-                && !Attribute.IsDefined(e, typeof(DapperIgnoreAttribute)))
+                .Where(e => e.Name != "Id" && !Attribute.IsDefined(e, typeof(DapperIgnoreAttribute)))
                 .Select(e => e.Name);
         }
 
@@ -59,7 +57,7 @@ namespace VkBank.Persistence.Repositories
             }
         }
 
-        public void Add(T entity)
+        public void Create(T entity)
         {
             var columns = GetColumns();
             var stringOfColumns = string.Join(", ", columns);

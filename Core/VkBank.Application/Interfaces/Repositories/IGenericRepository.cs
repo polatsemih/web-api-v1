@@ -11,7 +11,7 @@ namespace VkBank.Application.Interfaces.Repositories
     {
         List<T> GetAll();
         T GetById(long id);
-        void Add(T entity);
+        void Create(T entity);
         void Update(T entity);
         void Delete(T entity);
     }

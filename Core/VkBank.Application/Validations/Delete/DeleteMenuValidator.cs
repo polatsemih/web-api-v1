@@ -13,7 +13,7 @@ namespace VkBank.Application.Validations.Delete
     {
         public DeleteMenuValidator()
         {
-            RuleFor(m => m.Id).ValidateMenuId();
+            RuleFor(m => m.Id).ValidateId();
         }
     }
 }

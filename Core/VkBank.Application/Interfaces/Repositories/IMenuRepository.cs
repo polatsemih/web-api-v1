@@ -9,6 +9,8 @@ namespace VkBank.Application.Interfaces.Repositories
 {
     public interface IMenuRepository : IGenericRepository<Menu>
     {
-        //public List<Menu> GetMenuByParentId(int Id);
+        public void CreateMenu(Menu menu);
+        public void UpdateMenu(Menu menu);
+        public void DeleteMenu(long id);
     }
 }

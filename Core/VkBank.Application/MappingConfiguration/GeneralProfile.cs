@@ -17,15 +17,14 @@ namespace VkBank.Application.MappingConfiguration
     {
         public GeneralProfile()
         {
-            //Queries
-            CreateMap<Menu, GetAllMenuQueryRequest>().ReverseMap();
-            CreateMap<Menu, GetMenuQueryRequest>().ReverseMap();
-            //CreateMap<Menu, GetMenuByParentIdQueryRequest>().ReverseMap();
-
             //Commands
             CreateMap<Menu, CreateMenuCommandRequest>().ReverseMap();
             CreateMap<Menu, UpdateMenuCommandRequest>().ReverseMap();
             CreateMap<Menu, DeleteMenuCommandRequest>().ReverseMap();
+
+            //Queries
+            CreateMap<Menu, GetAllMenuQueryRequest>().ReverseMap();
+            CreateMap<Menu, GetMenuQueryRequest>().ReverseMap();
         }
     }
 }

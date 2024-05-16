@@ -16,19 +16,19 @@ namespace VkBank.Application.Features.Commands.CreateEvent
 {
     public class CreateMenuCommandRequest : IRequest<IResult>
     {
-        public long? ParentId { get; set; }
-        public required string Name_TR { get; set; }
-        public required string Name_EN { get; set; }
-        public required byte Type { get; set; }
-        public required byte Priority { get; set; }
-        public required string Keyword { get; set; }
-        public byte? Icon { get; set; }
-        public bool IsGroup { get; set; } = false;
-        public bool IsNew { get; set; } = true;
-        public DateTime NewStartDate { get; set; } = DateTime.Now;
-        public DateTime NewEndDate { get; set; } = DateTime.Now.AddDays(7);
-        public bool IsActive { get; set; } = true;
-        public int MyProperty { get; set; }
+        public long ParentId { get; set; }
+        public string Name_TR { get; set; }
+        public string Name_EN { get; set; }
+        public int ScreenCode { get; set; }
+        public byte Type { get; set; }
+        public int Priority { get; set; }
+        public string Keyword { get; set; }
+        public string? Icon { get; set; }
+        public bool IsGroup { get; set; }
+        public bool IsNew { get; set; }
+        public DateTime? NewStartDate { get; set; }
+        public DateTime? NewEndDate { get; set; }
+        public bool IsActive { get; set; }
     }
 
     public class CreateMenuCommandHandler : IRequestHandler<CreateMenuCommandRequest, IResult>
@@ -37,7 +37,7 @@ namespace VkBank.Application.Features.Commands.CreateEvent
         private readonly CreateMenuValidator _validator;
         private readonly IMenuRepository _menuRepository;
 
-        public CreateMenuCommandHandler(IMenuRepository menuRepository, IMapper mapper, CreateMenuValidator validator)
+        public CreateMenuCommandHandler(IMapper mapper, CreateMenuValidator validator, IMenuRepository menuRepository)
         {
             _mapper = mapper;
             _validator = validator;
@@ -47,14 +47,29 @@ namespace VkBank.Application.Features.Commands.CreateEvent
         public Task<IResult> Handle(CreateMenuCommandRequest request, CancellationToken cancellationToken)
         {
             Menu menu = _mapper.Map<Menu>(request);
-            var result = _validator.ValidateAsync(menu, cancellationToken);
-            if (result.IsCompletedSuccessfully)
+            var result = _validator.Validate(menu);
+            if (result.IsValid)
             {
-                _menuRepository.Add(menu);
+                _menuRepository.CreateMenu(menu);
                 return Task.FromResult<IResult>(new SuccessResult(ResultMessages.MenuCreated));
             }
 
-            return Task.FromResult<IResult>(new ErrorResult(result.Result.Errors.First().ErrorMessage));
+            return Task.FromResult<IResult>(new ErrorResult(result.Errors.First().ErrorMessage));
+
+
+
+
+
+
+
+            //var result = _validator.ValidateAsync(menu, cancellationToken);
+            //if (result.IsCompletedSuccessfully)
+            //{
+            //    _menuRepository.Create(menu);
+            //    return Task.FromResult<IResult>(new SuccessResult(ResultMessages.MenuCreated));
+            //}
+
+            //return Task.FromResult<IResult>(new ErrorResult(result.Result.Errors.First().ErrorMessage));
         }
     }
 }
