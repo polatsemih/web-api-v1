@@ -1,15 +1,15 @@
 ﻿using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace VkBank.Application.Interfaces.Context
 {
     public interface IDapperContext
     {
-        public SqlConnection GetConnection();
         public void Execute(Action<SqlConnection> @event);
+        public Task ExecuteAsync(Func<SqlConnection, Task> action);
+        public Task ExecuteAsync(Func<SqlConnection, Task> action, CancellationToken cancellationToken);
+
+        public T Query<T>(Func<SqlConnection, T> query);
+        public Task<T> QueryAsync<T>(Func<SqlConnection, Task<T>> query);
+        public Task<T> QueryAsync<T>(Func<SqlConnection, Task<T>> query, CancellationToken cancellationToken);
     }
 }

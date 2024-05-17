@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace VkBank.Domain.Common.Result
+namespace VkBank.Domain.Results.Common
 {
     public class SuccessDataResult<T> : DataResult<T>
     {

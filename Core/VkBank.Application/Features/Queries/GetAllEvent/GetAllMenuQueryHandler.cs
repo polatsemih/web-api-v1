@@ -1,12 +1,8 @@
 ﻿using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VkBank.Application.Interfaces.Repositories;
-using VkBank.Domain.Common.Result;
+using VkBank.Domain.Contstants;
 using VkBank.Domain.Entities;
+using VkBank.Domain.Results.Common;
 
 namespace VkBank.Application.Features.Queries.GetAllEvent
 {
@@ -24,10 +20,14 @@ namespace VkBank.Application.Features.Queries.GetAllEvent
             _menuRepository = menuRepository;
         }
 
-        public Task<IDataResult<List<Menu>>> Handle(GetAllMenuQueryRequest request, CancellationToken cancellationToken)
+        public async Task<IDataResult<List<Menu>>> Handle(GetAllMenuQueryRequest request, CancellationToken cancellationToken)
         {
-            var result = _menuRepository.GetAll();
-            return Task.FromResult<IDataResult<List<Menu>>>(new SuccessDataResult<List<Menu>>(result));
+            IEnumerable<Menu> result = await _menuRepository.GetAllMenuAsync(cancellationToken);
+            if (!result.Any())
+            {
+                return new ErrorDataResult<List<Menu>>(null, ResultMessages.MenuNoDatas);
+            }
+            return new SuccessDataResult<List<Menu>>(result.ToList());
         }
     }
 }

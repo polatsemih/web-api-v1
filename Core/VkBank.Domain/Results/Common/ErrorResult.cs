@@ -4,11 +4,11 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace VkBank.Domain.Common.Result
+namespace VkBank.Domain.Results.Common
 {
-    public class SuccessResult : Result
+    public class ErrorResult : Result
     {
-        public SuccessResult(string message) : base(true, message)
+        public ErrorResult(string message) : base(false, message)
         {
 
         }

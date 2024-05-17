@@ -1,26 +1,18 @@
 ﻿using Dapper;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using VkBank.Application.Interfaces.Context;
 using VkBank.Application.Interfaces.Repositories;
-using VkBank.Domain.Common;
-using VkBank.Persistence.Context;
-using static Dapper.SqlMapper;
+using VkBank.Domain.Entities.Common;
 
 namespace VkBank.Persistence.Repositories
 {
     public abstract class DapperGenericRepository<T> : IGenericRepository<T> where T : EntityBase
     {
-        public IDapperContext DapperContext;
+        protected readonly IDapperContext _dapperContext;
         private readonly string _tableName;
 
         public DapperGenericRepository(IDapperContext dapperContext, string tableName)
         {
-            DapperContext = dapperContext;
+            _dapperContext = dapperContext;
             _tableName = tableName;
         }
 
@@ -32,63 +24,61 @@ namespace VkBank.Persistence.Repositories
                 .Select(e => e.Name);
         }
 
-        public List<T> GetAll()
+
+        public async Task<IEnumerable<T>> GetAllAsync()
         {
             var query = $"SELECT * FROM {_tableName}";
 
-            using (var connection = DapperContext.GetConnection())
+            return await _dapperContext.QueryAsync(async (connection) =>
             {
-                //connection.OpenAsync().Wait();
-
-                connection.Open();
-
-                return (List<T>)connection.Query<T>(query);
-            }
+                return await connection.QueryAsync<T>(query);
+            });
         }
 
-        public T GetById(long id)
+        public async Task<T?> GetByIdAsync(long id)
         {
+            var parameters = new { Id = id };
             var query = $"SELECT * FROM {_tableName} WHERE Id = @Id";
 
-            using (var connection = DapperContext.GetConnection())
+            return await _dapperContext.QueryAsync(async (connection) =>
             {
-                connection.Open();
-                return connection.QueryFirst<T>(query);
-            }
+                return await connection.QueryFirstOrDefaultAsync<T>(query, parameters);
+            });
         }
 
-        public void Create(T entity)
+        public async Task CreateAsync(T entity)
         {
             var columns = GetColumns();
             var stringOfColumns = string.Join(", ", columns);
             var stringOfParameters = string.Join(", ", columns.Select(e => "@" + e));
             var query = $"INSERT INTO {_tableName} ({stringOfColumns}) VALUES ({stringOfParameters})";
 
-            DapperContext.Execute((connection) =>
+            await _dapperContext.ExecuteAsync(async (connection) =>
             {
-                connection.Execute(query, entity);
+                await connection.ExecuteAsync(query, entity);
             });
         }
 
-        public void Update(T entity)
+        public async Task UpdateAsync(T entity)
         {
             var columns = GetColumns();
             var stringOfColumns = string.Join(", ", columns.Select(e => $"{e} = @{e}"));
-            var query = $"update {_tableName} set {stringOfColumns} where Id = @Id";
+            var query = $"UPDATE {_tableName} SET {stringOfColumns} WHERE Id = @Id";
 
-            DapperContext.Execute((conn) =>
+            await _dapperContext.ExecuteAsync(async (connection) =>
             {
-                conn.Execute(query, entity);
+                await connection.ExecuteAsync(query, entity);
             });
         }
 
-        public void Delete(T entity)
+        public async Task DeleteAsync(long id)
         {
+            var parameters = new { Id = id };
             var query = $"DELETE FROM {_tableName} WHERE Id = @Id";
 
-            DapperContext.Execute((connection) =>
+            await _dapperContext.ExecuteAsync(async (connection) =>
             {
-                connection.Execute(query, entity);
+                await connection.ExecuteAsync(query, parameters);
             });
         }
     }

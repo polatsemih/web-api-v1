@@ -1,16 +1,10 @@
 ﻿using AutoMapper;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VkBank.Application.Interfaces.Repositories;
 using VkBank.Application.Validations.Create;
-using VkBank.Domain.Common.Result;
 using VkBank.Domain.Contstants;
 using VkBank.Domain.Entities;
+using VkBank.Domain.Results.Common;
 
 namespace VkBank.Application.Features.Commands.CreateEvent
 {
@@ -44,32 +38,23 @@ namespace VkBank.Application.Features.Commands.CreateEvent
             _menuRepository = menuRepository;
         }
 
-        public Task<IResult> Handle(CreateMenuCommandRequest request, CancellationToken cancellationToken)
+        public async Task<IResult> Handle(CreateMenuCommandRequest request, CancellationToken cancellationToken)
         {
             Menu menu = _mapper.Map<Menu>(request);
-            var result = _validator.Validate(menu);
-            if (result.IsValid)
+
+            var validationResult = _validator.Validate(menu);
+            if (!validationResult.IsValid)
             {
-                _menuRepository.CreateMenu(menu);
-                return Task.FromResult<IResult>(new SuccessResult(ResultMessages.MenuCreated));
+                return new ErrorResult(validationResult.Errors.First().ErrorMessage);
             }
 
-            return Task.FromResult<IResult>(new ErrorResult(result.Errors.First().ErrorMessage));
+            long? menuId = await _menuRepository.CreateMenuAndGetIdAsync(menu, cancellationToken);
+            if (menuId == null)
+            {
+                return new ErrorResult(ResultMessages.MenuCreatedFailed);
+            }
 
-
-
-
-
-
-
-            //var result = _validator.ValidateAsync(menu, cancellationToken);
-            //if (result.IsCompletedSuccessfully)
-            //{
-            //    _menuRepository.Create(menu);
-            //    return Task.FromResult<IResult>(new SuccessResult(ResultMessages.MenuCreated));
-            //}
-
-            //return Task.FromResult<IResult>(new ErrorResult(result.Result.Errors.First().ErrorMessage));
+            return new SuccessDataResult<long?>(menuId, ResultMessages.MenuCreated);
         }
     }
 }

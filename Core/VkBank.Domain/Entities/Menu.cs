@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel.DataAnnotations;
-using VkBank.Domain.Common;
+using VkBank.Domain.Entities.Common;
 
 namespace VkBank.Domain.Entities
 {

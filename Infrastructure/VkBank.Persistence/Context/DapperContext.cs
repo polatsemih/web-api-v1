@@ -1,43 +1,67 @@
 ﻿using Microsoft.Data.SqlClient;
-using System;
-using System.Collections.Generic;
-using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Microsoft.Extensions.Configuration;
 using VkBank.Application.Interfaces.Context;
+using VkBank.Domain.Contstants;
 
 namespace VkBank.Persistence.Context
 {
     public class DapperContext : IDapperContext
     {
-        private readonly IConfiguration _configuration;
-        private readonly string? _connectionString;
+        private readonly string _connectionString;
 
         public DapperContext(IConfiguration configuration)
         {
-            _configuration = configuration;
-            _connectionString = _configuration.GetConnectionString("SqlConnection");
+            _connectionString = configuration.GetConnectionString("SqlConnection")
+                ?? throw new InvalidOperationException(ExceptionMessages.ConnectionStringInvalid);
         }
 
-        public SqlConnection GetConnection()
+        private SqlConnection GetConnection()
         {
-            if (_connectionString == null)
-            {
-                throw new InvalidOperationException("Connection string is not initialized.");
-            }
-
             return new SqlConnection(_connectionString);
         }
 
+
         public void Execute(Action<SqlConnection> @event)
         {
-            using (var connection = GetConnection())
-            {
-                connection.Open();
-                @event(connection);
-            }
+            using var connection = GetConnection();
+            connection.Open();
+            @event(connection);
+        }
+
+        public async Task ExecuteAsync(Func<SqlConnection, Task> action)
+        {
+            await using var connection = GetConnection();
+            await connection.OpenAsync();
+            await action(connection);
+        }
+
+        public async Task ExecuteAsync(Func<SqlConnection, Task> action, CancellationToken cancellationToken)
+        {
+            await using var connection = GetConnection();
+            await connection.OpenAsync(cancellationToken);
+            await action(connection);
+        }
+
+
+        public T Query<T>(Func<SqlConnection, T> query)
+        {
+            using var connection = GetConnection();
+            connection.Open();
+            return query(connection);
+        }
+
+        public async Task<T> QueryAsync<T>(Func<SqlConnection, Task<T>> query)
+        {
+            await using var connection = GetConnection();
+            await connection.OpenAsync();
+            return await query(connection);
+        }
+
+        public async Task<T> QueryAsync<T>(Func<SqlConnection, Task<T>> query, CancellationToken cancellationToken)
+        {
+            await using var connection = GetConnection();
+            await connection.OpenAsync(cancellationToken);
+            return await query(connection);
         }
     }
 }
