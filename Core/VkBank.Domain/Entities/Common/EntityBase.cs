@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace VkBank.Domain.Common
+namespace VkBank.Domain.Entities.Common
 {
     public class EntityBase
     {

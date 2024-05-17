@@ -1,15 +1,10 @@
 ﻿using AutoMapper;
 using MediatR;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VkBank.Application.Interfaces.Repositories;
 using VkBank.Application.Validations.Update;
-using VkBank.Domain.Common.Result;
 using VkBank.Domain.Contstants;
 using VkBank.Domain.Entities;
+using VkBank.Domain.Results.Common;
 
 namespace VkBank.Application.Features.Commands.UpdateEvent
 {
@@ -44,17 +39,21 @@ namespace VkBank.Application.Features.Commands.UpdateEvent
             _menuRepository = menuRepository;
         }
 
-        public Task<IResult> Handle(UpdateMenuCommandRequest request, CancellationToken cancellationToken)
+        public async Task<IResult> Handle(UpdateMenuCommandRequest request, CancellationToken cancellationToken)
         {
             Menu menu = _mapper.Map<Menu>(request);
-            var result = _validator.Validate(menu);
-            if (result.IsValid)
+
+            var validationResult = _validator.Validate(menu);
+            if (!validationResult.IsValid)
             {
-                _menuRepository.UpdateMenu(menu);
-                return Task.FromResult<IResult>(new SuccessResult(ResultMessages.MenuUpdated));
+                return new ErrorResult(validationResult.Errors.First().ErrorMessage);
             }
 
-            return Task.FromResult<IResult>(new ErrorResult(result.Errors.First().ErrorMessage));
+            bool updateSuccess = await _menuRepository.UpdateMenuAsync(menu, cancellationToken);
+
+            return updateSuccess
+                ? new SuccessResult(ResultMessages.MenuUpdated)
+                : new ErrorResult(ResultMessages.MenuUpdatedFailed);
         }
     }
 }

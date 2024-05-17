@@ -1,14 +1,8 @@
 ﻿using Dapper;
-using System;
-using System.Collections.Generic;
 using System.Data;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using VkBank.Application.Interfaces.Context;
 using VkBank.Application.Interfaces.Repositories;
 using VkBank.Domain.Entities;
-using VkBank.Persistence.Context;
 
 namespace VkBank.Persistence.Repositories
 {
@@ -16,10 +10,30 @@ namespace VkBank.Persistence.Repositories
     {
         public DapperMenuRepository(IDapperContext dapperContext) : base(dapperContext, "Menu")
         {
-            
+
         }
 
-        public void CreateMenu(Menu menu)
+        public async Task<IEnumerable<Menu>> GetAllMenuAsync(CancellationToken cancellationToken)
+        {
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QueryAsync<Menu>("Menu.GetAllMenus", commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+        }
+
+
+        public async Task<Menu?> GetMenuByIdAsync(long id, CancellationToken cancellationToken)
+        {
+            var parameters = new { Id = id };
+
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleOrDefaultAsync<Menu>("Menu.GetMenuById", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+        }
+
+
+        public bool CreateMenu(Menu menu)
         {
             var parameters = new
             {
@@ -38,13 +52,101 @@ namespace VkBank.Persistence.Repositories
                 menu.IsActive
             };
 
-            DapperContext.Execute((connection) =>
+            //Directly Executing SP
+
+            //_dapperContext.Execute((connection) =>
+            //{
+            //    connection.Execute("Menu.CreateMenu", parameters, commandType: CommandType.StoredProcedure);
+            //});
+
+            int rowsAffected = _dapperContext.Query<int>((connection) =>
             {
-                connection.Execute("CreateMenu", parameters, commandType: CommandType.StoredProcedure);
+                return connection.QuerySingle<int>("Menu.CreateMenu", parameters, commandType: CommandType.StoredProcedure);
+            });
+
+            return rowsAffected > 0;
+        }
+
+        public async Task<bool> CreateMenuAsync(Menu menu, CancellationToken cancellationToken)
+        {
+            var parameters = new
+            {
+                menu.ParentId,
+                menu.Name_TR,
+                menu.Name_EN,
+                menu.ScreenCode,
+                menu.Type,
+                menu.Priority,
+                menu.Keyword,
+                menu.Icon,
+                menu.IsGroup,
+                menu.IsNew,
+                menu.NewStartDate,
+                menu.NewEndDate,
+                menu.IsActive
+            };
+
+            int rowsAffected = await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleAsync<int>("Menu.CreateMenu", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+
+            return rowsAffected > 0;
+        }
+
+
+        public long? CreateMenuAndGetId(Menu menu)
+        {
+            var parameters = new
+            {
+                menu.ParentId,
+                menu.Name_TR,
+                menu.Name_EN,
+                menu.ScreenCode,
+                menu.Type,
+                menu.Priority,
+                menu.Keyword,
+                menu.Icon,
+                menu.IsGroup,
+                menu.IsNew,
+                menu.NewStartDate,
+                menu.NewEndDate,
+                menu.IsActive
+            };
+
+            return _dapperContext.Query<long?>((connection) =>
+            {
+                return connection.QuerySingleOrDefault<long?>("Menu.CreateMenuAndGetId", parameters, commandType: CommandType.StoredProcedure);
             });
         }
 
-        public void UpdateMenu(Menu menu)
+        public async Task<long?> CreateMenuAndGetIdAsync(Menu menu, CancellationToken cancellationToken)
+        {
+            var parameters = new
+            {
+                menu.ParentId,
+                menu.Name_TR,
+                menu.Name_EN,
+                menu.ScreenCode,
+                menu.Type,
+                menu.Priority,
+                menu.Keyword,
+                menu.Icon,
+                menu.IsGroup,
+                menu.IsNew,
+                menu.NewStartDate,
+                menu.NewEndDate,
+                menu.IsActive
+            };
+
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleOrDefaultAsync<long?>("Menu.CreateMenuAndGetId", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+        }
+
+
+        public bool UpdateMenu(Menu menu)
         {
             var parameters = new
             {
@@ -64,31 +166,65 @@ namespace VkBank.Persistence.Repositories
                 menu.IsActive
             };
 
-            DapperContext.Execute((connection) =>
+            int rowsAffected = _dapperContext.Query<int>((connection) =>
             {
-                connection.Execute("UpdateMenu", parameters, commandType: CommandType.StoredProcedure);
+                return connection.QuerySingle<int>("Menu.UpdateMenu", parameters, commandType: CommandType.StoredProcedure);
             });
+
+            return rowsAffected > 0;
         }
 
-        public void DeleteMenu(long id)
+        public async Task<bool> UpdateMenuAsync(Menu menu, CancellationToken cancellationToken)
+        {
+            var parameters = new
+            {
+                menu.Id,
+                menu.ParentId,
+                menu.Name_TR,
+                menu.Name_EN,
+                menu.ScreenCode,
+                menu.Type,
+                menu.Priority,
+                menu.Keyword,
+                menu.Icon,
+                menu.IsGroup,
+                menu.IsNew,
+                menu.NewStartDate,
+                menu.NewEndDate,
+                menu.IsActive
+            };
+
+            int rowsAffected = await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleAsync<int>("Menu.UpdateMenu", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+
+            return rowsAffected > 0;
+        }
+
+
+        public bool DeleteMenu(long id)
         {
             var parameters = new { Id = id };
 
-            DapperContext.Execute((connection) =>
+            int rowsAffected = _dapperContext.Query<int>((connection) =>
             {
-                connection.Execute("DeleteMenu", parameters, commandType: CommandType.StoredProcedure);
+                return connection.QuerySingle<int>("Menu.DeleteMenu", parameters, commandType: CommandType.StoredProcedure);
             });
+
+            return rowsAffected > 0;
         }
 
-        //public List<Menu> GetMenuByParentId(int Id)
-        //{
-        //    var query = $"SELECT * FROM Menu WHERE ParentId = {Id} ";
+        public async Task<bool> DeleteMenuAsync(long id, CancellationToken cancellationToken)
+        {
+            var parameters = new { Id = id };
 
-        //    using (var connnection = DapperContext.GetConnection())
-        //    {
-        //        connnection.Open();
-        //        return (List<Menu>)connnection.Query<Menu>(query);
-        //    }
-        //}
+            int rowsAffected = await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleAsync<int>("Menu.DeleteMenu", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+
+            return rowsAffected > 0;
+        }
     }
 }
