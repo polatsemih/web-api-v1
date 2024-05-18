@@ -4,7 +4,7 @@ namespace VkBank.Application.Interfaces.Context
 {
     public interface IDapperContext
     {
-        public void Execute(Action<SqlConnection> @event);
+        public void Execute(Action<SqlConnection> action);
         public Task ExecuteAsync(Func<SqlConnection, Task> action);
         public Task ExecuteAsync(Func<SqlConnection, Task> action, CancellationToken cancellationToken);
 

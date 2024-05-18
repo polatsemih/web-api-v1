@@ -1,22 +1,21 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace VkBank.Domain.Contstants
+﻿namespace VkBank.Domain.Contstants
 {
     public class ResultMessages
     {
-        //Menu
-        public const string MenuCreated = "Menu Created";
-        public const string MenuCreatedFailed = "Menu Creation Failed";
-        public const string MenuUpdated = "Menu Updated";
-        public const string MenuUpdatedFailed = "Menu Update Failed";
-        public const string MenuDeleted = "Menu Deleted";
-        public const string MenuDeletedFailed = "Menu Deleted Failed";
+        // Menu
+        public const string MenuNoDatas = "No menu datas found";
+        public const string MenuNoData = "No menu data found for the given Id";
 
-        public const string MenuNoDatas = "No Menu Datas Found";
-        public const string MenuNoData = "No Menu Data Found By Given Id";
+        public const string MenuCreated = "Menu created";
+        public const string MenuCreateFailed = "Menu creation failed";
+
+        public const string MenuUpdated = "Menu updated";
+        public const string MenuUpdateFailed = "Menu update failed. Ensure that the given Id is valid.";
+
+        public const string MenuDeleted = "Menu deleted";
+        public const string MenuDeleteFailed = "Menu delete failed. Ensure that the given Id is valid.";
+
+        public const string MenuIdNotExist = "Menu Id does not exist";
+        public const string MenuParentIdNotExist = "Menu ParentId does not exist";
     }
 }

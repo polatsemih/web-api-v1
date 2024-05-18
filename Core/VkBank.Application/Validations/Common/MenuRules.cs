@@ -26,7 +26,7 @@ namespace VkBank.Application.Validations.Common
         {
             return ruleBuilder
                 .NotEmpty().WithMessage(ValidationMessages.MenuScreenCodeEmpty)
-                .GreaterThan(10000).WithMessage(ValidationMessages.MenuScreenCodePositive);
+                .GreaterThan(10000).WithMessage(ValidationMessages.MenuScreenCodeMinRange);
         }
 
         public static IRuleBuilderOptions<T, byte> ValidateMenuType<T>(this IRuleBuilder<T, byte> ruleBuilder) where T : Menu

@@ -1,11 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using VkBank.Domain.Contstants;
-
-namespace VkBank.Domain.Contstants
+﻿namespace VkBank.Domain.Contstants
 {
     public class ValidationMessages
     {
@@ -13,7 +6,7 @@ namespace VkBank.Domain.Contstants
         public const string IsActiveNull = "IsActive cannot be null";
 
         
-        //Menu
+        // Menu
         public const string MenuParentIdNull = "Menu ParentId cannot be null";
         public const string MenuParentIdPositiveOrZero = "Menu ParentId must be greater than or equal to 0";
 
@@ -22,11 +15,11 @@ namespace VkBank.Domain.Contstants
         public static readonly string MenuNameMaxLength = "Menu Name cannot exceed " + LengthLimits.MenuNameMaxLength.ToString() + " characters";
 
         public const string MenuScreenCodeEmpty = "Menu ScreenCode cannot be empty.";
-        public static readonly string MenuScreenCodePositive = "Menu ScreenCode must be greater than " + LengthLimits.MenuScreenCodeMinRange.ToString();
+        public static readonly string MenuScreenCodeMinRange = "Menu ScreenCode must be greater than " + LengthLimits.MenuScreenCodeMinRange.ToString();
 
         public const string MenuTypeEmpty = "Menu Type cannot be empty";
 
-        public const string MenuPriorityNull = "Menu uPriority cannot be null";
+        public const string MenuPriorityNull = "Menu Priority cannot be null";
         public const string MenuPriorityPositiveOrZero = "Menu Priority must be greater than or equal to 0";
 
         public const string MenuKeywordEmpty = "Menu Keyword cannot be empty";

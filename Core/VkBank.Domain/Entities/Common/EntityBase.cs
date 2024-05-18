@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace VkBank.Domain.Entities.Common
+﻿namespace VkBank.Domain.Entities.Common
 {
     public class EntityBase
     {
@@ -14,7 +8,7 @@ namespace VkBank.Domain.Entities.Common
         public long Id { get; set; }
 
         /// <summary>
-        /// Indicates whether the entity is active
+        /// Indicates whether the entity is active/visible
         /// </summary>
         public bool IsActive { get; set; }
 

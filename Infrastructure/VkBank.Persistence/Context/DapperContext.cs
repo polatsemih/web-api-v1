@@ -11,8 +11,7 @@ namespace VkBank.Persistence.Context
 
         public DapperContext(IConfiguration configuration)
         {
-            _connectionString = configuration.GetConnectionString("SqlConnection")
-                ?? throw new InvalidOperationException(ExceptionMessages.ConnectionStringInvalid);
+            _connectionString = configuration.GetConnectionString("SqlConnection") ?? throw new InvalidOperationException(ExceptionMessages.ConnectionStringInvalid);
         }
 
         private SqlConnection GetConnection()
@@ -21,23 +20,23 @@ namespace VkBank.Persistence.Context
         }
 
 
-        public void Execute(Action<SqlConnection> @event)
+        public void Execute(Action<SqlConnection> action)
         {
-            using var connection = GetConnection();
+            using SqlConnection connection = GetConnection();
             connection.Open();
-            @event(connection);
+            action(connection);
         }
 
         public async Task ExecuteAsync(Func<SqlConnection, Task> action)
         {
-            await using var connection = GetConnection();
+            await using SqlConnection connection = GetConnection();
             await connection.OpenAsync();
             await action(connection);
         }
 
         public async Task ExecuteAsync(Func<SqlConnection, Task> action, CancellationToken cancellationToken)
         {
-            await using var connection = GetConnection();
+            await using SqlConnection connection = GetConnection();
             await connection.OpenAsync(cancellationToken);
             await action(connection);
         }
@@ -45,21 +44,21 @@ namespace VkBank.Persistence.Context
 
         public T Query<T>(Func<SqlConnection, T> query)
         {
-            using var connection = GetConnection();
+            using SqlConnection connection = GetConnection();
             connection.Open();
             return query(connection);
         }
 
         public async Task<T> QueryAsync<T>(Func<SqlConnection, Task<T>> query)
         {
-            await using var connection = GetConnection();
+            await using SqlConnection connection = GetConnection();
             await connection.OpenAsync();
             return await query(connection);
         }
 
         public async Task<T> QueryAsync<T>(Func<SqlConnection, Task<T>> query, CancellationToken cancellationToken)
         {
-            await using var connection = GetConnection();
+            await using SqlConnection connection = GetConnection();
             await connection.OpenAsync(cancellationToken);
             return await query(connection);
         }
