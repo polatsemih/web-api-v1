@@ -2,7 +2,7 @@
 using VkBank.Application.Interfaces.Repositories;
 using VkBank.Domain.Contstants;
 using VkBank.Domain.Entities;
-using VkBank.Domain.Results.Common;
+using VkBank.Domain.Results.Data;
 
 namespace VkBank.Application.Features.Queries.GetEvent
 {
@@ -25,7 +25,7 @@ namespace VkBank.Application.Features.Queries.GetEvent
             var result = await _menuRepository.GetMenuByIdAsync(request.Id, cancellationToken);
             if (result == null)
             {
-                return new ErrorDataResult<Menu>(null, ResultMessages.MenuNoData);
+                return new ErrorDataResult<Menu>(ResultMessages.MenuNoData, null);
             }
             return new SuccessDataResult<Menu>(result);
         }

@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using VkBank.Domain.Entities.Common;
+﻿using VkBank.Domain.Entities.Common;
 
 namespace VkBank.Domain.Entities
 {
     public class Menu : EntityBase
     {
         /// <summary>
-        /// Identifier of the parent menu item. NULL if it is the parent menu item.
+        /// Identifier of the parent menu item. 0 if it is the top-level parent menu item.
         /// </summary>
         public long ParentId { get; set; }
 
@@ -23,17 +20,17 @@ namespace VkBank.Domain.Entities
         public string Name_EN { get; set; }
 
         /// <summary>
-        /// Screen code associated with the menu item. Must start with 10000.
+        /// Screen code associated with the menu item. The code must be within the range starting from 10000.
         /// </summary>
         public int ScreenCode { get; set; }
 
         /// <summary>
-        /// Type of the menu item (e.g., my profile menu = 10, my world menu = 20, all transactions = 30)
+        /// Type of the menu item (e.g., profile menu = 10, my world menu = 20, all transactions = 30)
         /// </summary>
         public byte Type { get; set; }
 
         /// <summary>
-        /// Priority of the menu item for ordering purposes
+        /// Priority of the menu item for ordering
         /// </summary>
         public int Priority { get; set; }
 
@@ -66,5 +63,8 @@ namespace VkBank.Domain.Entities
         /// End date for the new menu item
         /// </summary>
         public DateTime? NewEndDate { get; set; }
+
+
+        public List<Menu> Children { get; set; } = new List<Menu>();
     }
 }

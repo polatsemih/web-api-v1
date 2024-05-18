@@ -20,14 +20,14 @@ namespace VkBank.Persistence.Repositories
         {
             return typeof(T)
                 .GetProperties()
-                .Where(e => e.Name != "Id" && !Attribute.IsDefined(e, typeof(DapperIgnoreAttribute)))
-                .Select(e => e.Name);
+                .Where(c => c.Name != "Id" && !Attribute.IsDefined(c, typeof(DapperIgnoreAttribute)))
+                .Select(c => c.Name);
         }
 
 
         public async Task<IEnumerable<T>> GetAllAsync()
         {
-            var query = $"SELECT * FROM {_tableName}";
+            string query = $"SELECT * FROM {_tableName}";
 
             return await _dapperContext.QueryAsync(async (connection) =>
             {
@@ -37,8 +37,8 @@ namespace VkBank.Persistence.Repositories
 
         public async Task<T?> GetByIdAsync(long id)
         {
+            string query = $"SELECT * FROM {_tableName} WHERE Id = @Id";
             var parameters = new { Id = id };
-            var query = $"SELECT * FROM {_tableName} WHERE Id = @Id";
 
             return await _dapperContext.QueryAsync(async (connection) =>
             {
@@ -48,10 +48,10 @@ namespace VkBank.Persistence.Repositories
 
         public async Task CreateAsync(T entity)
         {
-            var columns = GetColumns();
-            var stringOfColumns = string.Join(", ", columns);
-            var stringOfParameters = string.Join(", ", columns.Select(e => "@" + e));
-            var query = $"INSERT INTO {_tableName} ({stringOfColumns}) VALUES ({stringOfParameters})";
+            IEnumerable<string> columns = GetColumns();
+            string stringOfColumns = string.Join(", ", columns);
+            string stringOfParameters = string.Join(", ", columns.Select(c => "@" + c));
+            string query = $"INSERT INTO {_tableName} ({stringOfColumns}) VALUES ({stringOfParameters})";
 
             await _dapperContext.ExecuteAsync(async (connection) =>
             {
@@ -61,9 +61,9 @@ namespace VkBank.Persistence.Repositories
 
         public async Task UpdateAsync(T entity)
         {
-            var columns = GetColumns();
-            var stringOfColumns = string.Join(", ", columns.Select(e => $"{e} = @{e}"));
-            var query = $"UPDATE {_tableName} SET {stringOfColumns} WHERE Id = @Id";
+            IEnumerable<string> columns = GetColumns();
+            string stringOfColumns = string.Join(", ", columns.Select(c => $"{c} = @{c}"));
+            string query = $"UPDATE {_tableName} SET {stringOfColumns} WHERE Id = @Id";
 
             await _dapperContext.ExecuteAsync(async (connection) =>
             {
@@ -73,8 +73,8 @@ namespace VkBank.Persistence.Repositories
 
         public async Task DeleteAsync(long id)
         {
+            string query = $"DELETE FROM {_tableName} WHERE Id = @Id";
             var parameters = new { Id = id };
-            var query = $"DELETE FROM {_tableName} WHERE Id = @Id";
 
             await _dapperContext.ExecuteAsync(async (connection) =>
             {

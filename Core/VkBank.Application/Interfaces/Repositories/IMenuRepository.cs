@@ -8,6 +8,10 @@ namespace VkBank.Application.Interfaces.Repositories
 
         public Task<Menu?> GetMenuByIdAsync(long id, CancellationToken cancellationToken);
 
+        public Task<bool> IsMenuIdExistsAsync(long id, CancellationToken cancellationToken);
+
+        public Task<bool> IsMenuParentIdExistsAsync(long parentId, CancellationToken cancellationToken);
+
         public bool CreateMenu(Menu menu);
         public Task<bool> CreateMenuAsync(Menu menu, CancellationToken cancellationToken);
 

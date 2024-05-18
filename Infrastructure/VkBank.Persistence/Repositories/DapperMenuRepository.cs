@@ -32,6 +32,26 @@ namespace VkBank.Persistence.Repositories
             }, cancellationToken);
         }
 
+        public async Task<bool> IsMenuIdExistsAsync(long id, CancellationToken cancellationToken)
+        {
+            var parameters = new { Id = id };
+
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleAsync<bool>("Menu.IsMenuIdExists", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+        }
+
+        public async Task<bool> IsMenuParentIdExistsAsync(long parentId, CancellationToken cancellationToken)
+        {
+            var parameters = new { ParentId = parentId };
+
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleAsync<bool>("Menu.IsMenuParentIdExists", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+        }
+
 
         public bool CreateMenu(Menu menu)
         {
