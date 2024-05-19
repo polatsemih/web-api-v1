@@ -41,13 +41,11 @@ Leverages stored procedures and triggers in the database layer for implementing 
 ---
 
 ## Onion Architecture Overview
-
 - Core
   - Domain
   - Application
     - Dependencies:
       - Domain
-      - 
       - AutoMapper
       - FluentValidation
       - FluentValidation.DependencyInjectionExtensions
@@ -58,8 +56,8 @@ Leverages stored procedures and triggers in the database layer for implementing 
   - Infrastructure
   - Persistence
     - Dependencies:
-      * Domain
-      * Application
+      - Domain
+      - Application
       - Dapper
       - Microsoft.Data.SqlClient
       - Microsoft.Extensions.Configuration
@@ -68,7 +66,6 @@ Leverages stored procedures and triggers in the database layer for implementing 
     - Dependencies:
       - Application
       - Persistence
-      - 
       - MediatR
       - Microsoft.Extensions.DependencyInjection
       - Swashbuckle.AspNetCore
