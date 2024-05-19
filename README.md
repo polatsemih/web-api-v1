@@ -58,9 +58,8 @@ Leverages stored procedures and triggers in the database layer for implementing 
   - Infrastructure
   - Persistence
     - Dependencies:
-      - Domain
-      - Application
-      - 
+      * Domain
+      * Application
       - Dapper
       - Microsoft.Data.SqlClient
       - Microsoft.Extensions.Configuration
