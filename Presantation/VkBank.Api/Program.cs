@@ -1,7 +1,20 @@
+using Serilog;
+using Serilog.Events;
 using VkBank.Application;
+using VkBank.Infrastructure;
 using VkBank.Persistence;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .ReadFrom.Configuration(builder.Configuration)
+    .CreateLogger();
+
+builder.Host.UseSerilog();
+
+builder.Services.AddApplicationDependencies();
+builder.Services.AddInfrastructureDependencies();
+builder.Services.AddPersistenceDependencies();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -12,9 +25,6 @@ builder.Configuration
     .SetBasePath(env.ContentRootPath) // setting local or server path dynamically => `C:\Users\SUP\Desktop\src\VkBank\Presantation\VkBank.Api`
     .AddJsonFile("appsettings.json", optional: false)
     .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
-
-builder.Services.AddApplicationDependencies();
-builder.Services.AddPersistenceDependencies();
 
 var app = builder.Build();
 
@@ -29,3 +39,5 @@ app.UseAuthorization();
 app.MapControllers();
 
 app.Run();
+
+Log.CloseAndFlush();
