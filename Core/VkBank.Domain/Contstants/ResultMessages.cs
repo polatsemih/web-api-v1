@@ -17,5 +17,9 @@
 
         public const string MenuIdNotExist = "Menu Id does not exist";
         public const string MenuParentIdNotExist = "Menu ParentId does not exist";
+        public const string MenuScreenCodeNotExist = "Menu ScreenCode does not exist";
+
+        public const string MenuRollbacked = "Menu rollbacked";
+        public const string MenuRollbackFailed = "Menu rollback failed";
     }
 }

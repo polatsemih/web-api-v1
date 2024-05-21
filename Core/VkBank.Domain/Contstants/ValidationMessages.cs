@@ -40,5 +40,7 @@
         public const string MenuNewEndDateEmpty = "Menu NewStartDate cannot be empty";
         public const string MenuNewEndDateInvalid = "Menu NewEndDate is invalid";
         public const string MenuNewEndDateMustLater = "Menu NewEndDate must be later than the NewStartDate";
+
+        public const string MenuRollbackActionTypeInvalid = "Invalid ActionType. ActionType must be either 0 for delete or 1 for update.";
     }
 }

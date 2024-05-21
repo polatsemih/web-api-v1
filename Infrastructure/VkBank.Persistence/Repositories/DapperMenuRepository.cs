@@ -12,26 +12,6 @@ namespace VkBank.Persistence.Repositories
         {
 
         }
-
-        public async Task<IEnumerable<Menu>> GetAllMenuAsync(CancellationToken cancellationToken)
-        {
-            return await _dapperContext.QueryAsync(async (connection) =>
-            {
-                return await connection.QueryAsync<Menu>("Menu.GetAllMenus", commandType: CommandType.StoredProcedure);
-            }, cancellationToken);
-        }
-
-
-        public async Task<Menu?> GetMenuByIdAsync(long id, CancellationToken cancellationToken)
-        {
-            var parameters = new { Id = id };
-
-            return await _dapperContext.QueryAsync(async (connection) =>
-            {
-                return await connection.QuerySingleOrDefaultAsync<Menu>("Menu.GetMenuById", parameters, commandType: CommandType.StoredProcedure);
-            }, cancellationToken);
-        }
-
         public async Task<bool> IsMenuIdExistsAsync(long id, CancellationToken cancellationToken)
         {
             var parameters = new { Id = id };
@@ -49,6 +29,45 @@ namespace VkBank.Persistence.Repositories
             return await _dapperContext.QueryAsync(async (connection) =>
             {
                 return await connection.QuerySingleAsync<bool>("Menu.IsMenuParentIdExists", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+        }
+
+        public async Task<bool> IsMenuScreenCodeExistsAsync(int screenCode, CancellationToken cancellationToken)
+        {
+            var parameters = new { ScreenCode = screenCode };
+
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleAsync<bool>("Menu.IsMenuScreenCodeExists", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+        }
+
+
+        public async Task<IEnumerable<Menu>> GetAllMenuAsync(CancellationToken cancellationToken)
+        {
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QueryAsync<Menu>("Menu.GetAllMenus", commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+        }
+
+        public async Task<Menu?> GetMenuByIdAsync(long id, CancellationToken cancellationToken)
+        {
+            var parameters = new { Id = id };
+
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleOrDefaultAsync<Menu>("Menu.GetMenuById", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+        }
+
+        public async Task<IEnumerable<Menu>> GetSearchedMenuAsync(string keyword, CancellationToken cancellationToken)
+        {
+            var parameters = new { Keyword = keyword };
+
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QueryAsync<Menu>("Menu.GetSearchedMenus", parameters, commandType: CommandType.StoredProcedure);
             }, cancellationToken);
         }
 
@@ -245,6 +264,53 @@ namespace VkBank.Persistence.Repositories
             }, cancellationToken);
 
             return rowsAffected > 0;
+        }
+
+
+        public async Task<bool> RollbackMenuByIdAsync(long id, byte actionType, CancellationToken cancellationToken)
+        {
+            var parameters = new 
+            { 
+                Id = id,
+                ActionType = actionType
+            };
+
+            int rowsAffected = await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleAsync<int>("Menu.RollbackMenuById", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+
+            return rowsAffected > 0;
+        }
+
+        public async Task<bool> RollbackMenuByScreenCodeAsync(int screenCodeInput, byte actionType, CancellationToken cancellationToken)
+        {
+            var parameters = new
+            {
+                ScreenCodeInput = screenCodeInput,
+                ActionType = actionType
+            };
+
+            int rowsAffected = await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleAsync<int>("Menu.RollbackMenuByScreenCode", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+
+            return rowsAffected > 0;
+        }
+
+        public async Task<int?> RollbackMenuByDateAsync(DateTime date, byte actionType, CancellationToken cancellationToken)
+        {
+            var parameters = new
+            {
+                Date = date,
+                ActionType = actionType
+            };
+
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleOrDefaultAsync<int?>("Menu.RollbackMenuByDate", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
         }
     }
 }

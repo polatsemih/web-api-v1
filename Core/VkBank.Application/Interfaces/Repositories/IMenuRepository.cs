@@ -4,13 +4,13 @@ namespace VkBank.Application.Interfaces.Repositories
 {
     public interface IMenuRepository : IGenericRepository<Menu>
     {
-        public Task<IEnumerable<Menu>> GetAllMenuAsync(CancellationToken cancellationToken);
-
-        public Task<Menu?> GetMenuByIdAsync(long id, CancellationToken cancellationToken);
-
         public Task<bool> IsMenuIdExistsAsync(long id, CancellationToken cancellationToken);
-
         public Task<bool> IsMenuParentIdExistsAsync(long parentId, CancellationToken cancellationToken);
+        public Task<bool> IsMenuScreenCodeExistsAsync(int screenCode, CancellationToken cancellationToken);
+
+        public Task<IEnumerable<Menu>> GetAllMenuAsync(CancellationToken cancellationToken);
+        public Task<Menu?> GetMenuByIdAsync(long id, CancellationToken cancellationToken);
+        public Task<IEnumerable<Menu>> GetSearchedMenuAsync(string keyword, CancellationToken cancellationToken);
 
         public bool CreateMenu(Menu menu);
         public Task<bool> CreateMenuAsync(Menu menu, CancellationToken cancellationToken);
@@ -23,5 +23,9 @@ namespace VkBank.Application.Interfaces.Repositories
 
         public bool DeleteMenu(long id);
         public Task<bool> DeleteMenuAsync(long id, CancellationToken cancellationToken);
+
+        public Task<bool> RollbackMenuByIdAsync(long id, byte actionType, CancellationToken cancellationToken);
+        public Task<bool> RollbackMenuByScreenCodeAsync(int screenCodeInput, byte actionType, CancellationToken cancellationToken);
+        public Task<int?> RollbackMenuByDateAsync(DateTime date, byte actionType, CancellationToken cancellationToken);
     }
 }
