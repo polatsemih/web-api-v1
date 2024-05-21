@@ -35,6 +35,8 @@ Leverages stored procedures and triggers in the database layer for implementing 
 * CQRS Pattern
 * MediatR Pattern
 * Dapper ORM
+* FluentValidation
+* AutoMapper
 * Microsoft SQL Server
 * Stored Procedures and Triggers
 
