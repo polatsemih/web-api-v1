@@ -6,6 +6,8 @@ using VkBank.Application.Features.Commands.CreateEvent;
 using VkBank.Application.Features.Commands.DeleteEvent;
 using VkBank.Application.Features.Commands.UpdateEvent;
 using VkBank.Domain.Entities;
+using VkBank.Domain.Results.Data;
+using VkBank.Infrastructure.Cache.Abstract;
 
 namespace VkBank.Api.Controllers
 {
@@ -13,11 +15,15 @@ namespace VkBank.Api.Controllers
     [ApiController]
     public class MenuController : ControllerBase
     {
-        private readonly IMediator _mediator;
+        private readonly string CacheKeyAllMenu = "CacheAllMenu";
 
-        public MenuController(IMediator mediator)
+        private readonly IMediator _mediator;
+        private readonly ICacheManager _cacheManager;
+
+        public MenuController(IMediator mediator, ICacheManager cacheManager)
         {
             _mediator = mediator;
+            _cacheManager = cacheManager;
         }
 
         /// <summary>
@@ -29,8 +35,16 @@ namespace VkBank.Api.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAll([FromQuery] GetAllMenuQueryRequest request)
         {
+            TimeSpan CacheDuration = TimeSpan.FromMinutes(10); // TimeSpan.Zero for infinite caching
+
+            var cachedMenus = _cacheManager.GetCache<List<Menu>>(CacheKeyAllMenu);
+            if (cachedMenus != null)
+            {
+                return Ok(new SuccessDataResult<List<Menu>>(cachedMenus));
+            }
+
             var result = await _mediator.Send(request);
-            if (result.IsSuccess == false)
+            if (!result.IsSuccess)
             {
                 return BadRequest(result.Message);
             }
@@ -46,6 +60,8 @@ namespace VkBank.Api.Controllers
             }
 
             result.Data = result.Data.Where(menu => menu.ParentId == 0).ToList();
+
+            _cacheManager.AddCache(CacheKeyAllMenu, result.Data, CacheDuration);
 
             return Ok(result);
         }
@@ -83,6 +99,9 @@ namespace VkBank.Api.Controllers
             {
                 return BadRequest(result.Message);
             }
+
+            _cacheManager.RemoveCache(CacheKeyAllMenu);
+
             return Ok(result);
         }
 
@@ -101,6 +120,9 @@ namespace VkBank.Api.Controllers
             {
                 return BadRequest(result.Message);
             }
+
+            _cacheManager.RemoveCache(CacheKeyAllMenu);
+
             return Ok(result);
         }
 
@@ -119,6 +141,9 @@ namespace VkBank.Api.Controllers
             {
                 return BadRequest(result.Message);
             }
+
+            _cacheManager.RemoveCache(CacheKeyAllMenu);
+
             return Ok(result);
         }
 
@@ -149,7 +174,7 @@ namespace VkBank.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut("rollback-by-id")]
-        public async Task<IActionResult> RolllbacById([FromBody] RollbackMenuByIdCommandRequest request)
+        public async Task<IActionResult> RolllbackById([FromBody] RollbackMenuByIdCommandRequest request)
         {
             var result = await _mediator.Send(request);
             if (result.IsSuccess == false)
@@ -167,7 +192,7 @@ namespace VkBank.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut("rollback-by-screencode")]
-        public async Task<IActionResult> RolllbacByScreenCode([FromBody] RollbackMenuByScreenCodeCommandRequest request)
+        public async Task<IActionResult> RolllbackByScreenCode([FromBody] RollbackMenuByScreenCodeCommandRequest request)
         {
             var result = await _mediator.Send(request);
             if (result.IsSuccess == false)
@@ -185,7 +210,7 @@ namespace VkBank.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut("rollback-by-date")]
-        public async Task<IActionResult> RolllbacByDate([FromBody] RollbackMenuByDateCommandRequest request)
+        public async Task<IActionResult> RolllbackByDate([FromBody] RollbackMenuByDateCommandRequest request)
         {
             var result = await _mediator.Send(request);
             if (result.IsSuccess == false)
