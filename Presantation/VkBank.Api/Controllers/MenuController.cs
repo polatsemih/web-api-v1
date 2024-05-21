@@ -121,5 +121,78 @@ namespace VkBank.Api.Controllers
             }
             return Ok(result);
         }
+
+        /// <summary>
+        /// Search Menu
+        /// </summary>
+        /// <param name="request">Menu Keyword</param>
+        /// <returns>List of menus</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] GetSearchedMenuQueryRequest request)
+        {
+            var result = await _mediator.Send(request);
+            if (result.IsSuccess == false)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result);
+        }
+
+
+        /// <summary>
+        /// Rollback Menu
+        /// </summary>
+        /// <param name="request">Menu Id, Action Type: 0 For Delete, 1 For Update</param>
+        /// <returns>True if the menu is rollbacked successfully, false otherwise</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpPut("rollback-by-id")]
+        public async Task<IActionResult> RolllbacById([FromBody] RollbackMenuByIdCommandRequest request)
+        {
+            var result = await _mediator.Send(request);
+            if (result.IsSuccess == false)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Rollback Menu
+        /// </summary>
+        /// <param name="request">Screen Code, Action Type: 0 For Delete, 1 For Update</param>
+        /// <returns>True if the menu is rollbacked successfully, false otherwise</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpPut("rollback-by-screencode")]
+        public async Task<IActionResult> RolllbacByScreenCode([FromBody] RollbackMenuByScreenCodeCommandRequest request)
+        {
+            var result = await _mediator.Send(request);
+            if (result.IsSuccess == false)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Rollback Menu
+        /// </summary>
+        /// <param name="request">Date, Action Type: 0 For Delete, 1 For Update</param>
+        /// <returns>True if the menu is rollbacked successfully, false otherwise</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpPut("rollback-by-date")]
+        public async Task<IActionResult> RolllbacByDate([FromBody] RollbackMenuByDateCommandRequest request)
+        {
+            var result = await _mediator.Send(request);
+            if (result.IsSuccess == false)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result);
+        }
     }
 }
