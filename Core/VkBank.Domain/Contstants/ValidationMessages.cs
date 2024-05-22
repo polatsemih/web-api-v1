@@ -4,8 +4,9 @@
     {
         public const string IdEmpty = "Id cannot be empty";
         public const string IsActiveNull = "IsActive cannot be null";
+        public const string RollbackTokenEmpty = "RollbackToken cannot be empty";
 
-        
+
         // Menu
         public const string MenuParentIdNull = "Menu ParentId cannot be null";
         public const string MenuParentIdPositiveOrZero = "Menu ParentId must be greater than or equal to 0";
@@ -32,7 +33,7 @@
 
         public const string MenuIsGroupNull = "Menu IsGroup cannot be null";
 
-        public const string MenuIsNewEmpty = "Menu IsNew cannot be empty";
+        public const string MenuIsNewNull = "Menu IsNew cannot be null";
 
         public const string MenuNewStartDateEmpty = "Menu NewStartDate cannot be empty";
         public const string MenuNewStartDateInvalid = "Menu NewStartDate is invalid";
@@ -40,7 +41,5 @@
         public const string MenuNewEndDateEmpty = "Menu NewStartDate cannot be empty";
         public const string MenuNewEndDateInvalid = "Menu NewEndDate is invalid";
         public const string MenuNewEndDateMustLater = "Menu NewEndDate must be later than the NewStartDate";
-
-        public const string MenuRollbackActionTypeInvalid = "Invalid ActionType. ActionType must be either 0 for delete or 1 for update.";
     }
 }

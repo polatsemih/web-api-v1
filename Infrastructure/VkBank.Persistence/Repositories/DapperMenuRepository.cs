@@ -6,7 +6,7 @@ using VkBank.Domain.Entities;
 
 namespace VkBank.Persistence.Repositories
 {
-    public class DapperMenuRepository : DapperGenericRepository<Menu>, IMenuRepository
+    public class DapperMenuRepository : DapperGenericRepository<EntityMenu>, IMenuRepository
     {
         public DapperMenuRepository(IDapperContext dapperContext) : base(dapperContext, "Menu")
         {
@@ -43,36 +43,36 @@ namespace VkBank.Persistence.Repositories
         }
 
 
-        public async Task<IEnumerable<Menu>> GetAllMenuAsync(CancellationToken cancellationToken)
+        public async Task<IEnumerable<EntityMenu>> GetAllMenuAsync(CancellationToken cancellationToken)
         {
             return await _dapperContext.QueryAsync(async (connection) =>
             {
-                return await connection.QueryAsync<Menu>("Menu.GetAllMenus", commandType: CommandType.StoredProcedure);
+                return await connection.QueryAsync<EntityMenu>("Menu.GetAllMenus", commandType: CommandType.StoredProcedure);
             }, cancellationToken);
         }
 
-        public async Task<Menu?> GetMenuByIdAsync(long id, CancellationToken cancellationToken)
+        public async Task<EntityMenu?> GetMenuByIdAsync(long id, CancellationToken cancellationToken)
         {
             var parameters = new { Id = id };
 
             return await _dapperContext.QueryAsync(async (connection) =>
             {
-                return await connection.QuerySingleOrDefaultAsync<Menu>("Menu.GetMenuById", parameters, commandType: CommandType.StoredProcedure);
+                return await connection.QuerySingleOrDefaultAsync<EntityMenu>("Menu.GetMenuById", parameters, commandType: CommandType.StoredProcedure);
             }, cancellationToken);
         }
 
-        public async Task<IEnumerable<Menu>> GetSearchedMenuAsync(string keyword, CancellationToken cancellationToken)
+        public async Task<IEnumerable<EntityMenu>> SearchMenuAsync(string keyword, CancellationToken cancellationToken)
         {
             var parameters = new { Keyword = keyword };
 
             return await _dapperContext.QueryAsync(async (connection) =>
             {
-                return await connection.QueryAsync<Menu>("Menu.GetSearchedMenus", parameters, commandType: CommandType.StoredProcedure);
+                return await connection.QueryAsync<EntityMenu>("Menu.GetSearchedMenus", parameters, commandType: CommandType.StoredProcedure);
             }, cancellationToken);
         }
 
 
-        public bool CreateMenu(Menu menu)
+        public bool CreateMenu(EntityMenu menu)
         {
             var parameters = new
             {
@@ -106,7 +106,7 @@ namespace VkBank.Persistence.Repositories
             return rowsAffected > 0;
         }
 
-        public async Task<bool> CreateMenuAsync(Menu menu, CancellationToken cancellationToken)
+        public async Task<bool> CreateMenuAsync(EntityMenu menu, CancellationToken cancellationToken)
         {
             var parameters = new
             {
@@ -134,7 +134,7 @@ namespace VkBank.Persistence.Repositories
         }
 
 
-        public long? CreateMenuAndGetId(Menu menu)
+        public long? CreateMenuAndGetId(EntityMenu menu)
         {
             var parameters = new
             {
@@ -159,7 +159,7 @@ namespace VkBank.Persistence.Repositories
             });
         }
 
-        public async Task<long?> CreateMenuAndGetIdAsync(Menu menu, CancellationToken cancellationToken)
+        public async Task<long?> CreateMenuAndGetIdAsync(EntityMenu menu, CancellationToken cancellationToken)
         {
             var parameters = new
             {
@@ -185,7 +185,7 @@ namespace VkBank.Persistence.Repositories
         }
 
 
-        public bool UpdateMenu(Menu menu)
+        public bool UpdateMenu(EntityMenu menu)
         {
             var parameters = new
             {
@@ -213,7 +213,7 @@ namespace VkBank.Persistence.Repositories
             return rowsAffected > 0;
         }
 
-        public async Task<bool> UpdateMenuAsync(Menu menu, CancellationToken cancellationToken)
+        public async Task<bool> UpdateMenuAsync(EntityMenu menu, CancellationToken cancellationToken)
         {
             var parameters = new
             {
@@ -267,13 +267,9 @@ namespace VkBank.Persistence.Repositories
         }
 
 
-        public async Task<bool> RollbackMenuByIdAsync(long id, byte actionType, CancellationToken cancellationToken)
+        public async Task<bool> RollbackMenuByIdAsync(long id, CancellationToken cancellationToken)
         {
-            var parameters = new 
-            { 
-                Id = id,
-                ActionType = actionType
-            };
+            var parameters = new { Id = id };
 
             int rowsAffected = await _dapperContext.QueryAsync(async (connection) =>
             {
@@ -283,13 +279,9 @@ namespace VkBank.Persistence.Repositories
             return rowsAffected > 0;
         }
 
-        public async Task<bool> RollbackMenuByScreenCodeAsync(int screenCodeInput, byte actionType, CancellationToken cancellationToken)
+        public async Task<bool> RollbackMenuByScreenCodeAsync(int screenCode, CancellationToken cancellationToken)
         {
-            var parameters = new
-            {
-                ScreenCodeInput = screenCodeInput,
-                ActionType = actionType
-            };
+            var parameters = new { ScreenCodeInput = screenCode };
 
             int rowsAffected = await _dapperContext.QueryAsync(async (connection) =>
             {
@@ -299,17 +291,13 @@ namespace VkBank.Persistence.Repositories
             return rowsAffected > 0;
         }
 
-        public async Task<int?> RollbackMenuByDateAsync(DateTime date, byte actionType, CancellationToken cancellationToken)
+        public async Task<int?> RollbackMenusByTokenAsync(Guid rollbackToken, CancellationToken cancellationToken)
         {
-            var parameters = new
-            {
-                Date = date,
-                ActionType = actionType
-            };
+            var parameters = new { RolebackToken = rollbackToken };
 
             return await _dapperContext.QueryAsync(async (connection) =>
             {
-                return await connection.QuerySingleOrDefaultAsync<int?>("Menu.RollbackMenuByDate", parameters, commandType: CommandType.StoredProcedure);
+                return await connection.QuerySingleOrDefaultAsync<int?>("Menu.RollbackMenusByToken", parameters, commandType: CommandType.StoredProcedure);
             }, cancellationToken);
         }
     }

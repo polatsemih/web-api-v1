@@ -1,5 +1,4 @@
 using Serilog;
-using Serilog.Events;
 using VkBank.Application;
 using VkBank.Infrastructure;
 using VkBank.Persistence;

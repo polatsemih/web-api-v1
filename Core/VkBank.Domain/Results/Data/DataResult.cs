@@ -4,14 +4,19 @@
     {
         public T? Data { get; set; }
 
-        public DataResult(bool suucess, string message, T? data) : base(suucess, message)
+        public DataResult(bool isSuccess, string message, T? data) : base(isSuccess, message)
         {
             Data = data;
         }
 
-        public DataResult(bool success, T? data) : base(success)
+        public DataResult(bool isSuccess, T? data) : base(isSuccess)
         {
             Data = data;
+        }
+
+        public DataResult(bool isSuccess, string message) : base(isSuccess, message)
+        {
+
         }
     }
 }
