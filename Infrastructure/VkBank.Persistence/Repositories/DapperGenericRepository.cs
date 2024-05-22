@@ -1,7 +1,8 @@
 ﻿using Dapper;
 using VkBank.Application.Interfaces.Context;
 using VkBank.Application.Interfaces.Repositories;
-using VkBank.Domain.Entities.Common;
+using VkBank.Domain.Entities;
+using VkBank.Domain.Entities.Attributes;
 
 namespace VkBank.Persistence.Repositories
 {

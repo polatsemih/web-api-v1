@@ -1,6 +1,4 @@
-﻿using VkBank.Domain.Entities;
-
-namespace VkBank.Domain.Results.Data
+﻿namespace VkBank.Domain.Results.Data
 {
     public class SuccessDataResult<T> : DataResult<T>
     {
@@ -10,6 +8,11 @@ namespace VkBank.Domain.Results.Data
         }
 
         public SuccessDataResult(T? data) : base(true, data)
+        {
+
+        }
+
+        public SuccessDataResult(string message) : base(true, message)
         {
 
         }

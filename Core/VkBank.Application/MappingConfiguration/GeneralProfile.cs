@@ -1,9 +1,5 @@
 ﻿using AutoMapper;
-using VkBank.Application.Features.Commands.CreateEvent;
-using VkBank.Application.Features.Commands.DeleteEvent;
-using VkBank.Application.Features.Commands.UpdateEvent;
-using VkBank.Application.Features.Queries.GetAllEvent;
-using VkBank.Application.Features.Queries.GetEvent;
+using VkBank.Application.Features.Menu.Commands;
 using VkBank.Domain.Entities;
 
 namespace VkBank.Application.MappingConfiguration
@@ -13,13 +9,10 @@ namespace VkBank.Application.MappingConfiguration
         public GeneralProfile()
         {
             // Queries
-            CreateMap<Menu, GetAllMenuQueryRequest>().ReverseMap();
-            CreateMap<Menu, GetMenuQueryRequest>().ReverseMap();
 
             // Commands
-            CreateMap<Menu, CreateMenuCommandRequest>().ReverseMap();
-            CreateMap<Menu, UpdateMenuCommandRequest>().ReverseMap();
-            CreateMap<Menu, DeleteMenuCommandRequest>().ReverseMap();
+            CreateMap<EntityMenu, CreateMenuCommandRequest>().ReverseMap();
+            CreateMap<EntityMenu, UpdateMenuCommandRequest>().ReverseMap();
         }
     }
 }

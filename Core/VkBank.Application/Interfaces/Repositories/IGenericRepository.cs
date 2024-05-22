@@ -1,4 +1,4 @@
-﻿using VkBank.Domain.Entities.Common;
+﻿using VkBank.Domain.Entities;
 
 namespace VkBank.Application.Interfaces.Repositories
 {

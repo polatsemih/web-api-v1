@@ -1,13 +1,10 @@
 ﻿using MediatR;
 using Microsoft.AspNetCore.Mvc;
-using VkBank.Application.Features.Queries.GetAllEvent;
-using VkBank.Application.Features.Queries.GetEvent;
-using VkBank.Application.Features.Commands.CreateEvent;
-using VkBank.Application.Features.Commands.DeleteEvent;
-using VkBank.Application.Features.Commands.UpdateEvent;
 using VkBank.Domain.Entities;
 using VkBank.Domain.Results.Data;
-using VkBank.Infrastructure.Cache.Abstract;
+using VkBank.Application.Features.Menu.Commands;
+using VkBank.Application.Features.Menu.Queries;
+using VkBank.Infrastructure.Services.Caching.Abstract;
 
 namespace VkBank.Api.Controllers
 {
@@ -15,12 +12,12 @@ namespace VkBank.Api.Controllers
     [ApiController]
     public class MenuController : ControllerBase
     {
-        private readonly string CacheKeyAllMenu = "CacheAllMenu";
+        private readonly string CacheKeyMenu = "CacheAllMenu";
 
         private readonly IMediator _mediator;
-        private readonly ICacheManager _cacheManager;
+        private readonly ICacheService _cacheManager;
 
-        public MenuController(IMediator mediator, ICacheManager cacheManager)
+        public MenuController(IMediator mediator, ICacheService cacheManager)
         {
             _mediator = mediator;
             _cacheManager = cacheManager;
@@ -35,12 +32,10 @@ namespace VkBank.Api.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAll([FromQuery] GetAllMenuQueryRequest request)
         {
-            TimeSpan CacheDuration = TimeSpan.FromMinutes(10); // TimeSpan.Zero for infinite caching
-
-            var cachedMenus = _cacheManager.GetCache<List<Menu>>(CacheKeyAllMenu);
+            var cachedMenus = _cacheManager.GetCache<List<EntityMenu>>(CacheKeyMenu);
             if (cachedMenus != null)
             {
-                return Ok(new SuccessDataResult<List<Menu>>(cachedMenus));
+                return Ok(new SuccessDataResult<List<EntityMenu>>(cachedMenus));
             }
 
             var result = await _mediator.Send(request);
@@ -49,19 +44,19 @@ namespace VkBank.Api.Controllers
                 return BadRequest(result.Message);
             }
 
-            Dictionary<long, Menu> menuDictionary = result.Data.ToDictionary(menu => menu.Id);
+            Dictionary<long, EntityMenu> menuDictionary = result.Data.ToDictionary(menu => menu.Id);
 
             foreach (var menu in result.Data)
             {
                 if (menu.ParentId != 0 && menuDictionary.TryGetValue(menu.ParentId, out var parentMenu))
                 {
-                    parentMenu.Children.Add(menu);
+                    parentMenu.SubMenu.Add(menu);
                 }
             }
 
             result.Data = result.Data.Where(menu => menu.ParentId == 0).ToList();
 
-            _cacheManager.AddCache(CacheKeyAllMenu, result.Data, CacheDuration);
+            _cacheManager.AddCache(CacheKeyMenu, result.Data, TimeSpan.Zero); // TimeSpan.FromMinutes(10) for 10 minutes caching
 
             return Ok(result);
         }
@@ -74,7 +69,25 @@ namespace VkBank.Api.Controllers
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpGet("get")]
-        public async Task<IActionResult> Get([FromQuery] GetMenuQueryRequest request)
+        public async Task<IActionResult> GetById([FromQuery] GetMenuByIdQueryRequest request)
+        {
+            var result = await _mediator.Send(request);
+            if (result.IsSuccess == false)
+            {
+                return BadRequest(result.Message);
+            }
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Search Menu
+        /// </summary>
+        /// <param name="request">Menu Keyword</param>
+        /// <returns>List of menus</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [HttpGet("search")]
+        public async Task<IActionResult> Search([FromQuery] SearchMenuQueryRequest request)
         {
             var result = await _mediator.Send(request);
             if (result.IsSuccess == false)
@@ -88,7 +101,7 @@ namespace VkBank.Api.Controllers
         /// Create Menu
         /// </summary>
         /// <param name="request">Menu Features</param>
-        /// <returns>True if the menu is created successfully, false otherwise</returns>
+        /// <returns>Created Menu Id if the menu is created successfully, false otherwise</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPost("create")]
@@ -100,7 +113,7 @@ namespace VkBank.Api.Controllers
                 return BadRequest(result.Message);
             }
 
-            _cacheManager.RemoveCache(CacheKeyAllMenu);
+            _cacheManager.RemoveCache(CacheKeyMenu);
 
             return Ok(result);
         }
@@ -121,7 +134,7 @@ namespace VkBank.Api.Controllers
                 return BadRequest(result.Message);
             }
 
-            _cacheManager.RemoveCache(CacheKeyAllMenu);
+            _cacheManager.RemoveCache(CacheKeyMenu);
 
             return Ok(result);
         }
@@ -142,34 +155,15 @@ namespace VkBank.Api.Controllers
                 return BadRequest(result.Message);
             }
 
-            _cacheManager.RemoveCache(CacheKeyAllMenu);
+            _cacheManager.RemoveCache(CacheKeyMenu);
 
             return Ok(result);
         }
 
         /// <summary>
-        /// Search Menu
+        /// Rollback Menu By Id
         /// </summary>
-        /// <param name="request">Menu Keyword</param>
-        /// <returns>List of menus</returns>
-        [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [HttpGet("search")]
-        public async Task<IActionResult> Search([FromQuery] GetSearchedMenuQueryRequest request)
-        {
-            var result = await _mediator.Send(request);
-            if (result.IsSuccess == false)
-            {
-                return BadRequest(result.Message);
-            }
-            return Ok(result);
-        }
-
-
-        /// <summary>
-        /// Rollback Menu
-        /// </summary>
-        /// <param name="request">Menu Id, Action Type: 0 For Delete, 1 For Update</param>
+        /// <param name="request">Menu Id</param>
         /// <returns>True if the menu is rollbacked successfully, false otherwise</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -185,9 +179,9 @@ namespace VkBank.Api.Controllers
         }
 
         /// <summary>
-        /// Rollback Menu
+        /// Rollback Menu By Screen Code
         /// </summary>
-        /// <param name="request">Screen Code, Action Type: 0 For Delete, 1 For Update</param>
+        /// <param name="request">Screen Code</param>
         /// <returns>True if the menu is rollbacked successfully, false otherwise</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
@@ -203,14 +197,14 @@ namespace VkBank.Api.Controllers
         }
 
         /// <summary>
-        /// Rollback Menu
+        /// Rollback Menu By Token
         /// </summary>
-        /// <param name="request">Date, Action Type: 0 For Delete, 1 For Update</param>
-        /// <returns>True if the menu is rollbacked successfully, false otherwise</returns>
+        /// <param name="request">Token</param>
+        /// <returns>Rollbacked row count if the menu is rollbacked successfully, false otherwise</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
-        [HttpPut("rollback-by-date")]
-        public async Task<IActionResult> RolllbackByDate([FromBody] RollbackMenuByDateCommandRequest request)
+        [HttpPut("rollback-by-token")]
+        public async Task<IActionResult> RolllbackByToken([FromBody] RollbackMenusByTokenCommandRequest request)
         {
             var result = await _mediator.Send(request);
             if (result.IsSuccess == false)

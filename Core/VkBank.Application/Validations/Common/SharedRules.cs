@@ -17,10 +17,10 @@ namespace VkBank.Application.Validations.Common
                 .NotNull().WithMessage(ValidationMessages.IsActiveNull);
         }
 
-        public static IRuleBuilderOptions<T, byte> ValidateRollbackActionType<T>(this IRuleBuilder<T, byte> ruleBuilder)
+        public static IRuleBuilderOptions<T, Guid> ValidateRollbackToken<T>(this IRuleBuilder<T, Guid> ruleBuilder)
         {
             return ruleBuilder
-                .Must(actionType => actionType == 0 || actionType == 1).WithMessage(ValidationMessages.MenuRollbackActionTypeInvalid);
+                .NotEmpty().WithMessage(ValidationMessages.RollbackTokenEmpty);
         }
     }
 }

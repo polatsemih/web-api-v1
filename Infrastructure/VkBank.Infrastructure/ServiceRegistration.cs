@@ -1,6 +1,10 @@
 ﻿using Microsoft.Extensions.DependencyInjection;
-using VkBank.Infrastructure.Cache.Abstract;
-using VkBank.Infrastructure.Cache.Concrete;
+using VkBank.Infrastructure.Services.Caching.Abstract;
+using VkBank.Infrastructure.Services.Caching.Concrete;
+using VkBank.Infrastructure.Services.Logging.Abstract;
+using VkBank.Infrastructure.Services.Logging.Concrete;
+using VkBank.Infrastructure.Services.Serialization.Abstract;
+using VkBank.Infrastructure.Services.Serialization.Concrete;
 
 namespace VkBank.Infrastructure
 {
@@ -9,8 +13,10 @@ namespace VkBank.Infrastructure
         public static void AddInfrastructureDependencies(this IServiceCollection services)
         {
             services.AddMemoryCache();
-            services.AddScoped<ICacheManager, CacheManager>();
+            services.AddSingleton<ICacheService, CacheService>();
             services.AddLogging();
+            services.AddSingleton(typeof(ILogService<>), typeof(LogService<>));
+            services.AddSingleton<ISerializerService, SerializerService>();
         }
     }
 }
