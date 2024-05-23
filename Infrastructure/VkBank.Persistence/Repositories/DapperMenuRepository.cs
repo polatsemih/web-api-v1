@@ -12,6 +12,7 @@ namespace VkBank.Persistence.Repositories
         {
 
         }
+
         public async Task<bool> IsMenuIdExistsAsync(long id, CancellationToken cancellationToken)
         {
             var parameters = new { Id = id };
@@ -22,13 +23,13 @@ namespace VkBank.Persistence.Repositories
             }, cancellationToken);
         }
 
-        public async Task<bool> IsMenuParentIdExistsAsync(long parentId, CancellationToken cancellationToken)
+        public async Task<bool> IsMenuIdExistsAtHistoryAsync(long menuId, CancellationToken cancellationToken)
         {
-            var parameters = new { ParentId = parentId };
+            var parameters = new { MenuId = menuId };
 
             return await _dapperContext.QueryAsync(async (connection) =>
             {
-                return await connection.QuerySingleAsync<bool>("Menu.IsMenuParentIdExists", parameters, commandType: CommandType.StoredProcedure);
+                return await connection.QuerySingleAsync<bool>("Menu.IsMenuIdExistsAtHistory", parameters, commandType: CommandType.StoredProcedure);
             }, cancellationToken);
         }
 
@@ -42,6 +43,26 @@ namespace VkBank.Persistence.Repositories
             }, cancellationToken);
         }
 
+        public async Task<bool> IsMenuScreenCodeExistsAtHistoryAsync(int screenCode, CancellationToken cancellationToken)
+        {
+            var parameters = new { ScreenCode = screenCode };
+
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleAsync<bool>("Menu.IsMenuScreenCodeExistsAtHistory", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+        }
+
+        public async Task<bool> IsMenuParentIdExistsAsync(long parentId, CancellationToken cancellationToken)
+        {
+            var parameters = new { ParentId = parentId };
+
+            return await _dapperContext.QueryAsync(async (connection) =>
+            {
+                return await connection.QuerySingleAsync<bool>("Menu.IsMenuParentIdExists", parameters, commandType: CommandType.StoredProcedure);
+            }, cancellationToken);
+        }
+
 
         public async Task<IEnumerable<EntityMenu>> GetAllMenuAsync(CancellationToken cancellationToken)
         {
@@ -51,13 +72,13 @@ namespace VkBank.Persistence.Repositories
             }, cancellationToken);
         }
 
-        public async Task<EntityMenu?> GetMenuByIdAsync(long id, CancellationToken cancellationToken)
+        public async Task<IEnumerable<EntityMenu>> GetMenuByIdAsync(long id, CancellationToken cancellationToken)
         {
             var parameters = new { Id = id };
 
             return await _dapperContext.QueryAsync(async (connection) =>
             {
-                return await connection.QuerySingleOrDefaultAsync<EntityMenu>("Menu.GetMenuById", parameters, commandType: CommandType.StoredProcedure);
+                return await connection.QueryAsync<EntityMenu>("Menu.GetMenuById", parameters, commandType: CommandType.StoredProcedure);
             }, cancellationToken);
         }
 

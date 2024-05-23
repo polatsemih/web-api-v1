@@ -68,6 +68,13 @@ namespace VkBank.Application.Features.Menu.Commands
 
         public async Task<IResult> Handle(UpdateMenuCommandRequest request, CancellationToken cancellationToken)
         {
+            var validationResult = _validator.Validate(request);
+            if (!validationResult.IsValid)
+            {
+                string errorMessages = string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage));
+                return new ErrorResult(errorMessages);
+            }
+
             bool isIdExists = await _menuRepository.IsMenuIdExistsAsync(request.Id, cancellationToken);
             if (!isIdExists)
             {
@@ -81,13 +88,6 @@ namespace VkBank.Application.Features.Menu.Commands
                 {
                     return new ErrorResult(ResultMessages.MenuParentIdNotExist);
                 }
-            }
-
-            var validationResult = _validator.Validate(request);
-            if (!validationResult.IsValid)
-            {
-                string errorMessages = string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage));
-                return new ErrorResult(errorMessages);
             }
 
             EntityMenu menu = _mapper.Map<EntityMenu>(request);

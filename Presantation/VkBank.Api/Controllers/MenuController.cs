@@ -5,6 +5,8 @@ using VkBank.Domain.Results.Data;
 using VkBank.Application.Features.Menu.Commands;
 using VkBank.Application.Features.Menu.Queries;
 using VkBank.Infrastructure.Services.Caching.Abstract;
+using VkBank.Domain.Results;
+using VkBank.Domain.Contstants;
 
 namespace VkBank.Api.Controllers
 {
@@ -32,7 +34,7 @@ namespace VkBank.Api.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAll([FromQuery] GetAllMenuQueryRequest request)
         {
-            var cachedMenus = _cacheManager.GetCache<List<EntityMenu>>(CacheKeyMenu);
+            var cachedMenus = _cacheManager.GetCache<List<EntityMenu>>(CacheKeyMenu, "GetAllMenu");
             if (cachedMenus != null)
             {
                 return Ok(new SuccessDataResult<List<EntityMenu>>(cachedMenus));
@@ -45,18 +47,17 @@ namespace VkBank.Api.Controllers
             }
 
             Dictionary<long, EntityMenu> menuDictionary = result.Data.ToDictionary(menu => menu.Id);
-
             foreach (var menu in result.Data)
             {
                 if (menu.ParentId != 0 && menuDictionary.TryGetValue(menu.ParentId, out var parentMenu))
                 {
-                    parentMenu.SubMenu.Add(menu);
+                    parentMenu.SubMenus.Add(menu);
                 }
             }
 
             result.Data = result.Data.Where(menu => menu.ParentId == 0).ToList();
 
-            _cacheManager.AddCache(CacheKeyMenu, result.Data, TimeSpan.Zero); // TimeSpan.FromMinutes(10) for 10 minutes caching
+            _cacheManager.AddCache(CacheKeyMenu, result.Data, TimeSpan.Zero, "GetAllMenu"); // TimeSpan.FromMinutes(10) for 10 minutes caching
 
             return Ok(result);
         }
@@ -71,12 +72,36 @@ namespace VkBank.Api.Controllers
         [HttpGet("get")]
         public async Task<IActionResult> GetById([FromQuery] GetMenuByIdQueryRequest request)
         {
+            var cachedMenus = _cacheManager.GetCache<List<EntityMenu>>(CacheKeyMenu, "GetByIdMenu");
+            if (cachedMenus != null)
+            {
+                var filteredMenu = cachedMenus
+                    .FirstOrDefault(menu => menu.Id == request.Id);
+
+                if (filteredMenu != null)
+                {
+                    return Ok(new SuccessDataResult<EntityMenu>(filteredMenu));
+                }
+            }
+
             var result = await _mediator.Send(request);
             if (result.IsSuccess == false)
             {
                 return BadRequest(result.Message);
             }
-            return Ok(result);
+
+            Dictionary<long, EntityMenu> menuDictionary = result.Data.ToDictionary(menu => menu.Id);
+            foreach (var menu in result.Data)
+            {
+                if (menu.ParentId != 0 && menuDictionary.TryGetValue(menu.ParentId, out var parentMenu))
+                {
+                    parentMenu.SubMenus.Add(menu);
+                }
+            }
+
+            var rootMenu = result.Data.First(menu => menu.Id == request.Id);
+
+            return Ok(new SuccessDataResult<EntityMenu>(rootMenu));
         }
 
         /// <summary>
@@ -89,12 +114,44 @@ namespace VkBank.Api.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] SearchMenuQueryRequest request)
         {
+            var cachedMenus = _cacheManager.GetCache<List<EntityMenu>>(CacheKeyMenu, "SearchMenu");
+            if (cachedMenus != null)
+            {
+                var filteredMenus = cachedMenus
+                    .Where(menu => menu.Keyword.Contains(request.Keyword, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+
+                if (filteredMenus.Any())
+                {
+                    return Ok(new SuccessDataResult<List<EntityMenu>>(filteredMenus));
+                }
+            }
+
             var result = await _mediator.Send(request);
             if (result.IsSuccess == false)
             {
                 return BadRequest(result.Message);
             }
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Remove Cached Menu
+        /// </summary>
+        /// <param name="request">Empty request body</param>
+        /// <returns>True if the menu cache removed successfully, false otherwise</returns>
+        [ProducesResponseType(StatusCodes.Status200OK)]
+        [HttpGet("remove-cache")]
+        public IActionResult RemoveCache()
+        {
+            var cachedMenus = _cacheManager.GetCache<List<EntityMenu>>(CacheKeyMenu, "RemoveMenuCache");
+            if (cachedMenus == null)
+            {
+                return Ok(new ErrorResult(ResultMessages.MenuCacheNotExist));
+            }
+
+            _cacheManager.RemoveCache(CacheKeyMenu, "RemoveMenuCache");
+            return Ok(new SuccessResult(ResultMessages.MenuCacheRemoved));
         }
 
         /// <summary>
@@ -113,7 +170,7 @@ namespace VkBank.Api.Controllers
                 return BadRequest(result.Message);
             }
 
-            _cacheManager.RemoveCache(CacheKeyMenu);
+            _cacheManager.RemoveCache(CacheKeyMenu, "CreateMenu");
 
             return Ok(result);
         }
@@ -134,7 +191,7 @@ namespace VkBank.Api.Controllers
                 return BadRequest(result.Message);
             }
 
-            _cacheManager.RemoveCache(CacheKeyMenu);
+            _cacheManager.RemoveCache(CacheKeyMenu, "UpdateMenu");
 
             return Ok(result);
         }
@@ -155,7 +212,7 @@ namespace VkBank.Api.Controllers
                 return BadRequest(result.Message);
             }
 
-            _cacheManager.RemoveCache(CacheKeyMenu);
+            _cacheManager.RemoveCache(CacheKeyMenu, "DeleteMenu");
 
             return Ok(result);
         }

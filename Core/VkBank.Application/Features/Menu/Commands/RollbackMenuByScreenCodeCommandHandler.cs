@@ -26,17 +26,17 @@ namespace VkBank.Application.Features.Menu.Commands
 
         public async Task<IResult> Handle(RollbackMenuByScreenCodeCommandRequest request, CancellationToken cancellationToken)
         {
-            bool isScreenCodeExists = await _menuRepository.IsMenuScreenCodeExistsAsync(request.ScreenCode, cancellationToken);
-            if (!isScreenCodeExists)
-            {
-                return new ErrorResult(ResultMessages.MenuScreenCodeNotExist);
-            }
-
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
                 string errorMessages = string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage));
                 return new ErrorResult(errorMessages);
+            }
+
+            bool isMenuScreenCodeExistsInHistory = await _menuRepository.IsMenuScreenCodeExistsAtHistoryAsync(request.ScreenCode, cancellationToken);
+            if (!isMenuScreenCodeExistsInHistory)
+            {
+                return new ErrorResult(ResultMessages.MenuScreenCodeNotExistInHistory);
             }
 
             bool rollbackSuccess = await _menuRepository.RollbackMenuByScreenCodeAsync(request.ScreenCode, cancellationToken);
