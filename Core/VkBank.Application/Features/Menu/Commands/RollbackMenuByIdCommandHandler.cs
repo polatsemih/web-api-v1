@@ -26,17 +26,17 @@ namespace VkBank.Application.Features.Menu.Commands
 
         public async Task<IResult> Handle(RollbackMenuByIdCommandRequest request, CancellationToken cancellationToken)
         {
-            bool isIdExists = await _menuRepository.IsMenuIdExistsAsync(request.Id, cancellationToken);
-            if (!isIdExists)
-            {
-                return new ErrorResult(ResultMessages.MenuIdNotExist);
-            }
-
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
                 string errorMessages = string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage));
                 return new ErrorResult(errorMessages);
+            }
+
+            bool isMenuIdExistsInHistory = await _menuRepository.IsMenuIdExistsAtHistoryAsync(request.Id, cancellationToken);
+            if (!isMenuIdExistsInHistory)
+            {
+                return new ErrorResult(ResultMessages.MenuIdNotExistInHistory);
             }
 
             bool rollbackSuccess = await _menuRepository.RollbackMenuByIdAsync(request.Id, cancellationToken);

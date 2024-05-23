@@ -18,25 +18,25 @@ namespace VkBank.Infrastructure.Services.Caching.Concrete
             _serializer = serializer;
         }
 
-        public T? GetCache<T>(string key)
+        public T? GetCache<T>(string key, string source)
         {
             if (_memoryCache.TryGetValue(key, out var cachedObject))
             {
-                _logger.LogInformation($"Cache hit for key: {key}");
+                _logger.LogInformation($"Cache hit for key: {key} from source {source}");
                 return _serializer.Deserialize<T>((string)cachedObject);
             }
-            _logger.LogInformation($"Cache miss for key: {key}");
+            _logger.LogInformation($"Cache miss for key: {key} from source {source}");
             return default;
         }
 
-        public void AddCache(string key, object value, TimeSpan duration)
+        public void AddCache(string key, object value, TimeSpan duration, string source)
         {
             var serializedValue = _serializer.Serialize(value);
 
             if (duration == TimeSpan.Zero)
             {
                 _memoryCache.Set(key, serializedValue, new MemoryCacheEntryOptions());
-                _logger.LogInformation($"Cache set for key: {key} with infinite duration");
+                _logger.LogInformation($"Cache set for key: {key} with infinite duration from source: {source}");
             }
             else
             {
@@ -44,14 +44,14 @@ namespace VkBank.Infrastructure.Services.Caching.Concrete
                 {
                     AbsoluteExpirationRelativeToNow = duration
                 });
-                _logger.LogInformation($"Cache set for key: {key} with duration: {duration}");
+                _logger.LogInformation($"Cache set for key: {key} with duration: {duration} from source: {source}");
             }
         }
 
-        public void RemoveCache(string key)
+        public void RemoveCache(string key, string source)
         {
             _memoryCache.Remove(key);
-            _logger.LogInformation($"Cache removed for key: {key}");
+            _logger.LogInformation($"Cache removed for key: {key} from source {source}");
         }
     }
 }

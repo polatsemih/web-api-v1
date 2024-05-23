@@ -2,7 +2,6 @@
 using VkBank.Application.Interfaces.Repositories;
 using VkBank.Domain.Contstants;
 using VkBank.Domain.Entities;
-using VkBank.Domain.Results;
 using VkBank.Domain.Results.Data;
 
 namespace VkBank.Application.Features.Menu.Queries

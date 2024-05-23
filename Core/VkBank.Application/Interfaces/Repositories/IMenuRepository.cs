@@ -5,11 +5,13 @@ namespace VkBank.Application.Interfaces.Repositories
     public interface IMenuRepository : IGenericRepository<EntityMenu>
     {
         public Task<bool> IsMenuIdExistsAsync(long id, CancellationToken cancellationToken);
-        public Task<bool> IsMenuParentIdExistsAsync(long parentId, CancellationToken cancellationToken);
+        public Task<bool> IsMenuIdExistsAtHistoryAsync(long menuId, CancellationToken cancellationToken);
         public Task<bool> IsMenuScreenCodeExistsAsync(int screenCode, CancellationToken cancellationToken);
+        public Task<bool> IsMenuScreenCodeExistsAtHistoryAsync(int screenCode, CancellationToken cancellationToken);
+        public Task<bool> IsMenuParentIdExistsAsync(long parentId, CancellationToken cancellationToken);
 
         public Task<IEnumerable<EntityMenu>> GetAllMenuAsync(CancellationToken cancellationToken);
-        public Task<EntityMenu?> GetMenuByIdAsync(long id, CancellationToken cancellationToken);
+        public Task<IEnumerable<EntityMenu>> GetMenuByIdAsync(long id, CancellationToken cancellationToken);
         public Task<IEnumerable<EntityMenu>> SearchMenuAsync(string keyword, CancellationToken cancellationToken);
 
         public bool CreateMenu(EntityMenu menu);

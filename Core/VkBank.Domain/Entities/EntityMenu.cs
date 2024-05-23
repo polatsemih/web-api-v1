@@ -63,6 +63,6 @@
         public DateTime? NewEndDate { get; set; }
 
 
-        public List<EntityMenu> SubMenu { get; set; } = new List<EntityMenu>();
+        public List<EntityMenu> SubMenus { get; set; } = new List<EntityMenu>();
     }
 }
