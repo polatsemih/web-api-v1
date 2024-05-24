@@ -11,4 +11,12 @@ namespace VkBank.Application.Validations.Menu
             RuleFor(r => r.Id).ValidateId();
         }
     }
+
+    public class GetMenuByIdWithSubMenusQueryRequestValidator : AbstractValidator<GetMenuByIdWithSubMenusQueryRequest>
+    {
+        public GetMenuByIdWithSubMenusQueryRequestValidator()
+        {
+            RuleFor(r => r.Id).ValidateId();
+        }
+    }
 }

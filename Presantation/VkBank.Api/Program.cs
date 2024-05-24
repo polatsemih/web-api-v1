@@ -12,7 +12,7 @@ Log.Logger = new LoggerConfiguration()
 builder.Host.UseSerilog();
 
 builder.Services.AddApplicationDependencies();
-builder.Services.AddInfrastructureDependencies();
+builder.Services.AddInfrastructureDependencies(builder.Configuration);
 builder.Services.AddPersistenceDependencies();
 
 builder.Services.AddControllers();

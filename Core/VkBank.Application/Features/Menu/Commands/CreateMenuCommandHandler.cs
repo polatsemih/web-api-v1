@@ -75,8 +75,8 @@ namespace VkBank.Application.Features.Menu.Commands
 
             if (request.ParentId != 0)
             {
-                bool isParentIdExists = await _menuRepository.IsMenuParentIdExistsAsync(request.ParentId, cancellationToken);
-                if (!isParentIdExists)
+                bool isParentIdExistsInMenu = await _menuRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken);
+                if (!isParentIdExistsInMenu)
                 {
                     return new ErrorResult(ResultMessages.MenuParentIdNotExist);
                 }

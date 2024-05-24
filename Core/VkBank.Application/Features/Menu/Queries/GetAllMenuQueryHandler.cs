@@ -22,7 +22,7 @@ namespace VkBank.Application.Features.Menu.Queries
 
         public async Task<IDataResult<List<EntityMenu>>> Handle(GetAllMenuQueryRequest request, CancellationToken cancellationToken)
         {
-            IEnumerable<EntityMenu> result = await _menuRepository.GetAllMenuAsync(cancellationToken);
+            IEnumerable<EntityMenu> result = await _menuRepository.GetAllMenusAsync(cancellationToken);
             if (!result.Any())
             {
                 return new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoDatas);

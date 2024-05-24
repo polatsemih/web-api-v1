@@ -11,7 +11,7 @@ namespace VkBank.Persistence.Context
 
         public DapperContext(IConfiguration configuration)
         {
-            _connectionString = configuration.GetConnectionString("SqlConnection") ?? throw new InvalidOperationException(ExceptionMessages.ConnectionStringInvalid);
+            _connectionString = configuration.GetConnectionString("SqlConnection") ?? throw new InvalidOperationException(ExceptionMessages.SqlConnectionStringInvalid);
         }
 
         private SqlConnection GetConnection()
