@@ -23,11 +23,11 @@ namespace VkBank.Infrastructure.Services.Caching.Concrete
             var cachedData = _database.StringGet(key);
             if (cachedData.IsNullOrEmpty)
             {
-                _logger.LogInformation($"Cache miss for key: {key} from source {source}");
+                _logger.LogInformation($"Redis Cache miss for key: {key} from source: {source}");
                 return default;
             }
 
-            _logger.LogInformation($"Cache hit for key: {key} from source {source}");
+            _logger.LogInformation($"Redis Cache hit for key: {key} from source: {source}");
             return _serializer.Deserialize<T>(cachedData);
         }
 
@@ -36,11 +36,11 @@ namespace VkBank.Infrastructure.Services.Caching.Concrete
             var cachedData = await _database.StringGetAsync(key);
             if (cachedData.IsNullOrEmpty)
             {
-                _logger.LogInformation($"Cache miss for key: {key} from source {source}");
+                _logger.LogInformation($"Redis Cache miss for key: {key} from source: {source}");
                 return default;
             }
 
-            _logger.LogInformation($"Cache hit for key: {key} from source {source}");
+            _logger.LogInformation($"Redis Cache hit for key: {key} from source: {source}");
             return _serializer.Deserialize<T>(cachedData);
         }
 
@@ -52,12 +52,12 @@ namespace VkBank.Infrastructure.Services.Caching.Concrete
             if (duration == TimeSpan.Zero)
             {
                 _database.StringSet(key, serializedValue);
-                _logger.LogInformation($"Cache set for key: {key} with infinite duration from source: {source}");
+                _logger.LogInformation($"Redis Cache set for key: {key} with infinite duration from source: {source}");
             }
             else
             {
                 _database.StringSet(key, serializedValue, duration);
-                _logger.LogInformation($"Cache set for key: {key} with duration: {duration} from source: {source}");
+                _logger.LogInformation($"Redis Cache set for key: {key} with duration: {duration} from source: {source}");
             }
         }
 
@@ -68,12 +68,12 @@ namespace VkBank.Infrastructure.Services.Caching.Concrete
             if (duration == TimeSpan.Zero)
             {
                 await _database.StringSetAsync(key, serializedValue);
-                _logger.LogInformation($"Cache set for key: {key} with infinite duration from source: {source}");
+                _logger.LogInformation($"Redis Cache set for key: {key} with infinite duration from source: {source}");
             }
             else
             {
                 await _database.StringSetAsync(key, serializedValue, duration);
-                _logger.LogInformation($"Cache set for key: {key} with duration: {duration} from source: {source}");
+                _logger.LogInformation($"Redis Cache set for key: {key} with duration: {duration} from source: {source}");
             }
         }
 
@@ -81,13 +81,13 @@ namespace VkBank.Infrastructure.Services.Caching.Concrete
         public void RemoveCache(string key, string source)
         {
             _database.KeyDelete(key);
-            _logger.LogInformation($"Cache removed for key: {key} from source {source}");
+            _logger.LogInformation($"Redis Cache removed for key: {key} from source: {source}");
         }
 
         public async Task RemoveCacheAsync(string key, string source)
         {
             await _database.KeyDeleteAsync(key);
-            _logger.LogInformation($"Cache removed for key: {key} from source {source}");
+            _logger.LogInformation($"Redis Cache removed for key: {key} from source: {source}");
         }
     }
 }
