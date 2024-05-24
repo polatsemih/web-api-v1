@@ -1,5 +1,4 @@
-﻿using AutoMapper;
-using MediatR;
+﻿using MediatR;
 using System.ComponentModel.DataAnnotations;
 using VkBank.Application.Interfaces.Repositories;
 using VkBank.Application.Validations.Menu;
@@ -34,14 +33,14 @@ namespace VkBank.Application.Features.Menu.Commands
                 return new ErrorResult(errorMessages);
             }
 
-            bool isIdExists = await _menuRepository.IsMenuIdExistsAsync(request.Id, cancellationToken);
-            if (!isIdExists)
+            bool isIdExistsInMenu = await _menuRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken);
+            if (!isIdExistsInMenu)
             {
                 return new ErrorResult(ResultMessages.MenuIdNotExist);
             }
 
-            bool deleteSuccess = await _menuRepository.DeleteMenuAsync(request.Id, cancellationToken);
-            return deleteSuccess ? new SuccessResult(ResultMessages.MenuDeleteSuccess) : new ErrorResult(ResultMessages.MenuDeleteError);
+            bool result = await _menuRepository.DeleteMenuAsync(request.Id, cancellationToken);
+            return result ? new SuccessResult(ResultMessages.MenuDeleteSuccess) : new ErrorResult(ResultMessages.MenuDeleteError);
         }
     }
 }

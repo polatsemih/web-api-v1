@@ -33,14 +33,22 @@ namespace VkBank.Application.Features.Menu.Commands
                 return new ErrorResult(errorMessages);
             }
 
-            bool isMenuIdExistsInHistory = await _menuRepository.IsMenuIdExistsAtHistoryAsync(request.Id, cancellationToken);
-            if (!isMenuIdExistsInHistory)
+            bool IsMenuIdExistsInMenuH = await _menuRepository.IsMenuIdExistsInMenuHAsync(request.Id, cancellationToken);
+            if (!IsMenuIdExistsInMenuH)
             {
                 return new ErrorResult(ResultMessages.MenuIdNotExistInHistory);
             }
 
-            bool rollbackSuccess = await _menuRepository.RollbackMenuByIdAsync(request.Id, cancellationToken);
-            return rollbackSuccess ? new SuccessResult(ResultMessages.MenuRollbackSuccess) : new ErrorResult(ResultMessages.MenuRollbackError);
+            int result = await _menuRepository.RollbackMenuByIdAsync(request.Id, cancellationToken);
+            if (result == 1)
+            {
+                return new SuccessResult(ResultMessages.MenuRollbackSuccess);
+            }
+            else if (result == -1)
+            {
+                return new SuccessResult(ResultMessages.MenuRollbackNoChanges);
+            }
+            return new ErrorResult(ResultMessages.MenuRollbackError);
         }
     }
 }

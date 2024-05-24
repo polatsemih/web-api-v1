@@ -2,7 +2,6 @@
 using VkBank.Application.Interfaces.Repositories;
 using VkBank.Application.Validations.Menu;
 using VkBank.Domain.Contstants;
-using VkBank.Domain.Entities;
 using VkBank.Domain.Results;
 using VkBank.Domain.Results.Data;
 
@@ -33,12 +32,22 @@ namespace VkBank.Application.Features.Menu.Commands
                 return new ErrorResult(errorMessages);
             }
 
-            int? result = await _menuRepository.RollbackMenusByTokenAsync(request.RollbackToken, cancellationToken);
-            if (result == null)
+            bool isRollbackTokenExistsInMenuH = await _menuRepository.IsRollbackTokenExistsInMenuHAsync(request.RollbackToken, cancellationToken);
+            if (!isRollbackTokenExistsInMenuH)
             {
-                return new ErrorResult(ResultMessages.MenuRollbackError);
+                return new ErrorResult(ResultMessages.MenuRollbackTokenNotExistInHistory);
             }
-            return new SuccessDataResult<int?>(ResultMessages.MenuRollbackSuccess, result);
+
+            int result = await _menuRepository.RollbackMenusByTokenAsync(request.RollbackToken, cancellationToken);
+            if (result > 0)
+            {
+                return new SuccessDataResult<int>(ResultMessages.MenuRollbackSuccess, result);
+            }
+            else if (result == -1)
+            {
+                return new SuccessResult(ResultMessages.MenuRollbackNoChanges);
+            }
+            return new ErrorResult(ResultMessages.MenuRollbackError);
         }
     }
 }

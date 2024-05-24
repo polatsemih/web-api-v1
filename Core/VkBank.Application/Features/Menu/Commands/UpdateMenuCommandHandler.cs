@@ -75,16 +75,16 @@ namespace VkBank.Application.Features.Menu.Commands
                 return new ErrorResult(errorMessages);
             }
 
-            bool isIdExists = await _menuRepository.IsMenuIdExistsAsync(request.Id, cancellationToken);
-            if (!isIdExists)
+            bool isIdExistsInMenu = await _menuRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken);
+            if (!isIdExistsInMenu)
             {
                 return new ErrorResult(ResultMessages.MenuIdNotExist);
             }
 
             if (request.ParentId != 0)
             {
-                bool isParentIdExists = await _menuRepository.IsMenuParentIdExistsAsync(request.ParentId, cancellationToken);
-                if (!isParentIdExists)
+                bool isParentIdExistsInMenu = await _menuRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken);
+                if (!isParentIdExistsInMenu)
                 {
                     return new ErrorResult(ResultMessages.MenuParentIdNotExist);
                 }
@@ -92,8 +92,16 @@ namespace VkBank.Application.Features.Menu.Commands
 
             EntityMenu menu = _mapper.Map<EntityMenu>(request);
 
-            bool updateSuccess = await _menuRepository.UpdateMenuAsync(menu, cancellationToken);
-            return updateSuccess ? new SuccessResult(ResultMessages.MenuUpdateSuccess) : new ErrorResult(ResultMessages.MenuUpdateError);
+            int result = await _menuRepository.UpdateMenuAsync(menu, cancellationToken);
+            if (result > 0)
+            {
+                return new SuccessResult(ResultMessages.MenuUpdateSuccess);
+            }
+            else if (result == -1)
+            {
+                return new SuccessResult(ResultMessages.MenuUpdateNoChanges);
+            }
+            return new ErrorResult(ResultMessages.MenuUpdateError);
         }
     }
 }
