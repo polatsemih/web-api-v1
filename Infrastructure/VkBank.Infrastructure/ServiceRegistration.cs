@@ -22,9 +22,12 @@ namespace VkBank.Infrastructure
             services.AddMemoryCache();
             services.AddSingleton<ICacheService, CacheService>();
 
+            services.AddSingleton<IRedisCacheService, RedisCacheService>();
+
             string redisConnectionString = configuration.GetConnectionString("RedisConnection") ?? throw new InvalidOperationException(ExceptionMessages.RedisConnectionStringInvalid);
             ConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(redisConnectionString) ?? throw new InvalidOperationException(ExceptionMessages.RedisConnectionError);
             services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+
         }
     }
 }
