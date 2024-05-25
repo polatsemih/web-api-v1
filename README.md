@@ -58,19 +58,19 @@ The project follows the Onion Architecture pattern, organizing code into layers 
 ---
 
 ### Application
-The Application layer is responsible for the application's commands and queries, handlers using the CQRS Pattern and MediatR pattern, and validators using FluentValidation. It also includes interfaces for Dapper and repositories, and AutoMapper for mapping command requests with entities.
+The Application layer is responsible for the application's commands and queries, handlers using the `CQRS Pattern` and `MediatR pattern`, and validators using `FluentValidation`. It also includes interfaces for `Dapper` and repositories, and `AutoMapper` for mapping command requests with entities.
 
 ### Domain
 The Domain layer contains the entities, constants, and result classes.
 
 ### Infrastructure
-The Infrastructure layer contains the necessary infrastructure for the application, including services for logging with `ILogger`, serialization with `JsonConvert` and caching using either `IMemoryCache` or `IConnectionMultiplexer` (i.e., Redis). The Redis server is configured to run on a WSL2 Ubuntu distribution at port 6379.
+The Infrastructure layer contains the necessary infrastructure for the application, including services for logging with `Serilog`, serialization with `Newtonsoft.Json` and caching using either `Microsoft.Extensions.Caching.Memory` or `StackExchange.Redis`. The `Redis server` is configured to run on a WSL2 Ubuntu distribution at port 6379.
 
 ### Persistence
-The Persistence layer manages the database connection and database methods. It uses Dapper as an ORM and includes both synchronous and asynchronous methods (also with cancellation token support). It can execute commands directly from raw SQL or by calling stored procedures.
+The Persistence layer manages the database connection and database methods. It uses `Dapper` as an ORM and includes both synchronous and asynchronous methods (also with cancellation token support). It can execute commands directly from `raw SQL` or by calling `stored procedures`.
 
 ### Api
-The API layer handles requests using `IMediator` and utilizes caching with `IRedisCacheService`.
+The API layer handles requests using `MediatR` and utilizes caching with `StackExchange.Redis`.
 
 ---
 
@@ -107,15 +107,15 @@ Leverages stored procedures and triggers in the database layer for implementing 
 ---
 
 ## Caching
-Utilizes `IMemoryCache` for in-memory caching and `IConnectionMultiplexer` (i.e., Redis) for distributed caching.
-The Redis server is configured to run on a WSL2 Ubuntu distribution at port 6379.
+Utilizes `Microsoft.Extensions.Caching.Memory` for in-memory caching and `StackExchange.Redis` for distributed caching.
+The `Redis server` is configured to run on a WSL2 Ubuntu distribution at port 6379.
 
 ---
 
 ## Logging
-Implements logging using `ILogger` to provide a robust and flexible logging infrastructure, helping to log data effectively.
+Implements logging using `Serilog` to provide a robust and flexible logging infrastructure, helping to log data effectively.
 
 ---
 
 ## Serialization
-Uses `JsonConvert` for serialization and deserialization of objects to and from JSON, ensuring data is easily readable and transferrable.
+Uses `Newtonsoft.Json` for serialization and deserialization of objects to and from JSON, ensuring data is easily readable and transferrable.
