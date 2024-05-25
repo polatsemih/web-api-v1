@@ -6,6 +6,81 @@ An ASP.NET Web API project that showcases the implementation of advanced archite
 ## Onion Architecture
 The project follows the Onion Architecture pattern, organizing code into layers based on their responsibilities, with clear separation of concerns and dependency inversion.
 
+### Onion Architecture Overview
+- Core
+  - Domain
+  - Application
+    - Dependencies:
+      - Project References:
+        - Domain
+      - NuGet Packages:
+        - AutoMapper
+        - FluentValidation
+        - FluentValidation.DependencyInjectionExtensions
+        - MediatR
+        - Microsoft.Data.SqlClient
+        - Microsoft.Extensions.Configuration
+- Infrastructure
+  - Infrastructure
+    - Dependencies:
+      - Project References:
+        - Domain
+      - NuGet Packages:
+        - Newtonsoft.Json
+        - Microsoft.Extensions.Logging
+        - Microsoft.Extensions.DependencyInjection.Abstractions
+        - Microsoft.Extensions.Caching.Memory
+        - Microsoft.Extensions.Caching.Abstractions
+        - StackExchange.Redis
+        - Microsoft.Extensions.Configuration
+  - Persistence
+    - Dependencies:
+      - Project References:
+        - Domain
+        - Application
+      - NuGet Packages:
+        - Dapper
+        - Microsoft.Data.SqlClient
+        - Microsoft.Extensions.Configuration
+- Presentation
+  - Web Api
+    - Dependencies:
+      - Project References:
+        - Domain
+        - Application
+        - Infrastructure
+        - Persistence
+      - NuGet Packages:
+        - MediatR
+        - Microsoft.Extensions.DependencyInjection
+        - Swashbuckle.AspNetCore
+
+---
+
+### Core
+The Core includes the Application and Domain layers, which contain the business logic and domain entities respectively.
+
+#### Application
+The Application layer is responsible for the application's commands and queries, handlers, and validators.
+
+#### Domain
+The Domain layer contains the core business entities, constants, and result classes.
+
+### Infrastructure
+The Infrastructure includes the Infrastructure and Persistence layers, which handle the application's external services integration and data access.
+
+#### Infrastructure
+The Infrastructure layer contains the necessary infrastructure for the application, including service registrations and configuration.
+
+#### Persistence
+The Persistence layer manages the database connection and database methods calling stored procedures using Dapper.
+
+
+### Presentation
+The Presentation includes the Api layer, which serves as the entry point for the application, handling HTTP requests and responses using MediatR.
+
+#### Api
+
 ---
 
 ## CQRS Pattern (Command Query Responsibility Segregation)
