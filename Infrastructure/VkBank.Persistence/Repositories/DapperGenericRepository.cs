@@ -1,12 +1,12 @@
 ﻿using Dapper;
+using System.Data;
 using VkBank.Application.Interfaces.Context;
 using VkBank.Application.Interfaces.Repositories;
-using VkBank.Domain.Entities;
 using VkBank.Domain.Entities.Attributes;
 
 namespace VkBank.Persistence.Repositories
 {
-    public abstract class DapperGenericRepository<T> : IGenericRepository<T> where T : EntityBase
+    public abstract class DapperGenericRepository<T> : IGenericRepository<T>
     {
         protected readonly IDapperContext _dapperContext;
         private readonly string _tableName;
@@ -25,14 +25,13 @@ namespace VkBank.Persistence.Repositories
                 .Select(c => c.Name);
         }
 
-
         public async Task<IEnumerable<T>> GetAllAsync()
         {
             string query = $"SELECT * FROM {_tableName}";
 
             return await _dapperContext.QueryAsync(async (connection) =>
             {
-                return await connection.QueryAsync<T>(query);
+                return await connection.QueryAsync<T>(sql: query);
             });
         }
 
@@ -43,7 +42,7 @@ namespace VkBank.Persistence.Repositories
 
             return await _dapperContext.QueryAsync(async (connection) =>
             {
-                return await connection.QueryFirstOrDefaultAsync<T>(query, parameters);
+                return await connection.QueryFirstOrDefaultAsync<T>(sql: query, param: parameters);
             });
         }
 
@@ -56,7 +55,7 @@ namespace VkBank.Persistence.Repositories
 
             await _dapperContext.ExecuteAsync(async (connection) =>
             {
-                await connection.ExecuteAsync(query, entity);
+                await connection.ExecuteAsync(sql: query, param: entity);
             });
         }
 
@@ -68,7 +67,7 @@ namespace VkBank.Persistence.Repositories
 
             await _dapperContext.ExecuteAsync(async (connection) =>
             {
-                await connection.ExecuteAsync(query, entity);
+                await connection.ExecuteAsync(sql: query, param: entity);
             });
         }
 
@@ -79,7 +78,7 @@ namespace VkBank.Persistence.Repositories
 
             await _dapperContext.ExecuteAsync(async (connection) =>
             {
-                await connection.ExecuteAsync(query, parameters);
+                await connection.ExecuteAsync(sql: query, param: parameters);
             });
         }
     }

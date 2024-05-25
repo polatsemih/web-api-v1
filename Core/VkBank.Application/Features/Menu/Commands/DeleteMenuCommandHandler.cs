@@ -16,12 +16,14 @@ namespace VkBank.Application.Features.Menu.Commands
     public class DeleteMenuCommandHandler : IRequestHandler<DeleteMenuCommandRequest, IResult>
     {
         private readonly DeleteMenuValidator _validator;
-        private readonly IMenuRepository _menuRepository;
+        private readonly IMenuQueryRepository _menuQueryRepository;
+        private readonly IMenuCommandRepository _menuCommandRepository;
 
-        public DeleteMenuCommandHandler(DeleteMenuValidator validator, IMenuRepository menuRepository)
+        public DeleteMenuCommandHandler(DeleteMenuValidator validator, IMenuQueryRepository menuQueryRepository, IMenuCommandRepository menuCommandRepository)
         {
             _validator = validator;
-            _menuRepository = menuRepository;
+            _menuQueryRepository = menuQueryRepository;
+            _menuCommandRepository = menuCommandRepository;
         }
 
         public async Task<IResult> Handle(DeleteMenuCommandRequest request, CancellationToken cancellationToken)
@@ -33,13 +35,13 @@ namespace VkBank.Application.Features.Menu.Commands
                 return new ErrorResult(errorMessages);
             }
 
-            bool isIdExistsInMenu = await _menuRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken);
+            bool isIdExistsInMenu = await _menuQueryRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken);
             if (!isIdExistsInMenu)
             {
                 return new ErrorResult(ResultMessages.MenuIdNotExist);
             }
 
-            bool result = await _menuRepository.DeleteMenuAsync(request.Id, cancellationToken);
+            bool result = await _menuCommandRepository.DeleteMenuAsync(request.Id, cancellationToken);
             return result ? new SuccessResult(ResultMessages.MenuDeleteSuccess) : new ErrorResult(ResultMessages.MenuDeleteError);
         }
     }

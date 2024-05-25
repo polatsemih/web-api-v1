@@ -10,8 +10,8 @@ using VkBank.Domain.Contstants;
 
 namespace VkBank.Api.Controllers
 {
-    [Route("api/menu")]
     [ApiController]
+    [Route("api/menu")]
     public class MenuController : ControllerBase
     {
         private readonly string CacheKeyMenu = "CacheAllMenu";

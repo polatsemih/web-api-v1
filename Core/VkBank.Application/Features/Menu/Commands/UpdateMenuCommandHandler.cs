@@ -57,13 +57,15 @@ namespace VkBank.Application.Features.Menu.Commands
     {
         private readonly IMapper _mapper;
         private readonly UpdateMenuValidator _validator;
-        private readonly IMenuRepository _menuRepository;
+        private readonly IMenuQueryRepository _menuQueryRepository;
+        private readonly IMenuCommandRepository _menuCommandRepository;
 
-        public UpdateMenuCommandHandler(IMapper mapper, UpdateMenuValidator validator, IMenuRepository menuRepository)
+        public UpdateMenuCommandHandler(IMapper mapper, UpdateMenuValidator validator, IMenuQueryRepository menuQueryRepository, IMenuCommandRepository menuCommandRepository)
         {
             _mapper = mapper;
             _validator = validator;
-            _menuRepository = menuRepository;
+            _menuQueryRepository = menuQueryRepository;
+            _menuCommandRepository = menuCommandRepository;
         }
 
         public async Task<IResult> Handle(UpdateMenuCommandRequest request, CancellationToken cancellationToken)
@@ -75,7 +77,7 @@ namespace VkBank.Application.Features.Menu.Commands
                 return new ErrorResult(errorMessages);
             }
 
-            bool isIdExistsInMenu = await _menuRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken);
+            bool isIdExistsInMenu = await _menuQueryRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken);
             if (!isIdExistsInMenu)
             {
                 return new ErrorResult(ResultMessages.MenuIdNotExist);
@@ -83,7 +85,7 @@ namespace VkBank.Application.Features.Menu.Commands
 
             if (request.ParentId != 0)
             {
-                bool isParentIdExistsInMenu = await _menuRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken);
+                bool isParentIdExistsInMenu = await _menuQueryRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken);
                 if (!isParentIdExistsInMenu)
                 {
                     return new ErrorResult(ResultMessages.MenuParentIdNotExist);
@@ -92,7 +94,7 @@ namespace VkBank.Application.Features.Menu.Commands
 
             EntityMenu menu = _mapper.Map<EntityMenu>(request);
 
-            int result = await _menuRepository.UpdateMenuAsync(menu, cancellationToken);
+            int result = await _menuCommandRepository.UpdateMenuAsync(menu, cancellationToken);
             if (result > 0)
             {
                 return new SuccessResult(ResultMessages.MenuUpdateSuccess);

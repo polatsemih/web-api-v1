@@ -2,7 +2,7 @@
 
 namespace VkBank.Application.Interfaces.Repositories
 {
-    public interface IMenuRepository : IGenericRepository<EntityMenu>
+    public interface IMenuQueryRepository : IGenericQueryRepository<EntityMenu>
     {
         public Task<bool> IsIdExistsInMenuAsync(long id, CancellationToken cancellationToken);
         public Task<bool> IsScreenCodeExistsInMenuAsync(int screenCode, CancellationToken cancellationToken);
@@ -15,14 +15,5 @@ namespace VkBank.Application.Interfaces.Repositories
         public Task<EntityMenu?> GetMenuByIdAsync(long id, CancellationToken cancellationToken);
         public Task<IEnumerable<EntityMenu>> GetMenuByIdWithSubMenusAsync(long id, CancellationToken cancellationToken);
         public Task<IEnumerable<EntityMenu>> SearchMenusAsync(string keyword, CancellationToken cancellationToken);
-
-        public Task<bool> CreateMenuAsync(EntityMenu menu, CancellationToken cancellationToken);
-        public Task<long?> CreateMenuAndGetIdAsync(EntityMenu menu, CancellationToken cancellationToken);
-        public Task<int> UpdateMenuAsync(EntityMenu menu, CancellationToken cancellationToken);
-        public Task<bool> DeleteMenuAsync(long id, CancellationToken cancellationToken);
-
-        public Task<int> RollbackMenuByIdAsync(long id, CancellationToken cancellationToken);
-        public Task<int> RollbackMenuByScreenCodeAsync(int screenCode, CancellationToken cancellationToken);
-        public Task<int> RollbackMenusByTokenAsync(Guid rollbackToken, CancellationToken cancellationToken);
     }
 }

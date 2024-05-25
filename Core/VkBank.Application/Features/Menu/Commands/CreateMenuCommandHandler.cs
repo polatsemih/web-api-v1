@@ -55,13 +55,15 @@ namespace VkBank.Application.Features.Menu.Commands
     {
         private readonly IMapper _mapper;
         private readonly CreateMenuValidator _validator;
-        private readonly IMenuRepository _menuRepository;
+        private readonly IMenuQueryRepository _menuQueryRepository;
+        private readonly IMenuCommandRepository _menuCommandRepository;
 
-        public CreateMenuCommandHandler(IMapper mapper, CreateMenuValidator validator, IMenuRepository menuRepository)
+        public CreateMenuCommandHandler(IMapper mapper, CreateMenuValidator validator, IMenuQueryRepository menuQueryRepository, IMenuCommandRepository menuCommandRepository)
         {
             _mapper = mapper;
             _validator = validator;
-            _menuRepository = menuRepository;
+            _menuQueryRepository = menuQueryRepository;
+            _menuCommandRepository = menuCommandRepository;
         }
 
         public async Task<IResult> Handle(CreateMenuCommandRequest request, CancellationToken cancellationToken)
@@ -75,7 +77,7 @@ namespace VkBank.Application.Features.Menu.Commands
 
             if (request.ParentId != 0)
             {
-                bool isParentIdExistsInMenu = await _menuRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken);
+                bool isParentIdExistsInMenu = await _menuQueryRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken);
                 if (!isParentIdExistsInMenu)
                 {
                     return new ErrorResult(ResultMessages.MenuParentIdNotExist);
@@ -84,7 +86,7 @@ namespace VkBank.Application.Features.Menu.Commands
 
             EntityMenu menu = _mapper.Map<EntityMenu>(request);
 
-            long? menuId = await _menuRepository.CreateMenuAndGetIdAsync(menu, cancellationToken);
+            long? menuId = await _menuCommandRepository.CreateMenuAndGetIdAsync(menu, cancellationToken);
             if (menuId == null)
             {
                 return new ErrorResult(ResultMessages.MenuCreateError);

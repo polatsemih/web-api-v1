@@ -19,12 +19,12 @@ namespace VkBank.Application.Features.Menu.Queries
     public class SearchMenuQueryHandler : IRequestHandler<SearchMenuQueryRequest, IResult>
     {
         private readonly SearchMenuValidator _validator;
-        private readonly IMenuRepository _menuRepository;
+        private readonly IMenuQueryRepository _menuQueryRepository;
 
-        public SearchMenuQueryHandler(SearchMenuValidator validator, IMenuRepository menuRepository)
+        public SearchMenuQueryHandler(SearchMenuValidator validator, IMenuQueryRepository menuQueryRepository)
         {
             _validator = validator;
-            _menuRepository = menuRepository;
+            _menuQueryRepository = menuQueryRepository;
         }
 
         public async Task<IResult> Handle(SearchMenuQueryRequest request, CancellationToken cancellationToken)
@@ -36,7 +36,7 @@ namespace VkBank.Application.Features.Menu.Queries
                 return new ErrorResult(errorMessages);
             }
 
-            IEnumerable<EntityMenu> result = await _menuRepository.SearchMenusAsync(request.Keyword, cancellationToken);
+            IEnumerable<EntityMenu> result = await _menuQueryRepository.SearchMenusAsync(request.Keyword, cancellationToken);
             if (!result.Any())
             {
                 return new ErrorResult(ResultMessages.MenuNoDatas);

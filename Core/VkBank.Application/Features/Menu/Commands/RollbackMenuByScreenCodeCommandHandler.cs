@@ -16,12 +16,14 @@ namespace VkBank.Application.Features.Menu.Commands
     public class RollbackMenuByScreenCodeCommandHandler : IRequestHandler<RollbackMenuByScreenCodeCommandRequest, IResult>
     {
         private readonly RollbackMenuByScreenCodeValidator _validator;
-        private readonly IMenuRepository _menuRepository;
+        private readonly IMenuQueryRepository _menuQueryRepository;
+        private readonly IMenuCommandRepository _menuCommandRepository;
 
-        public RollbackMenuByScreenCodeCommandHandler(RollbackMenuByScreenCodeValidator validator, IMenuRepository menuRepository)
+        public RollbackMenuByScreenCodeCommandHandler(RollbackMenuByScreenCodeValidator validator, IMenuQueryRepository menuQueryRepository, IMenuCommandRepository menuCommandRepository)
         {
             _validator = validator;
-            _menuRepository = menuRepository;
+            _menuQueryRepository = menuQueryRepository;
+            _menuCommandRepository = menuCommandRepository;
         }
 
         public async Task<IResult> Handle(RollbackMenuByScreenCodeCommandRequest request, CancellationToken cancellationToken)
@@ -33,13 +35,13 @@ namespace VkBank.Application.Features.Menu.Commands
                 return new ErrorResult(errorMessages);
             }
 
-            bool isScreenCodeExistsInMenuH = await _menuRepository.IsScreenCodeExistsInMenuHAsync(request.ScreenCode, cancellationToken);
+            bool isScreenCodeExistsInMenuH = await _menuQueryRepository.IsScreenCodeExistsInMenuHAsync(request.ScreenCode, cancellationToken);
             if (!isScreenCodeExistsInMenuH)
             {
                 return new ErrorResult(ResultMessages.MenuScreenCodeNotExistInHistory);
             }
 
-            int result = await _menuRepository.RollbackMenuByScreenCodeAsync(request.ScreenCode, cancellationToken);
+            int result = await _menuCommandRepository.RollbackMenuByScreenCodeAsync(request.ScreenCode, cancellationToken);
             if (result == 1)
             {
                 return new SuccessResult(ResultMessages.MenuRollbackSuccess);

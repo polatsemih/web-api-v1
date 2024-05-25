@@ -16,12 +16,14 @@ namespace VkBank.Application.Features.Menu.Commands
     public class RollbackMenuByIdCommandHandler : IRequestHandler<RollbackMenuByIdCommandRequest, IResult>
     {
         private readonly RollbackMenuByIdValidator _validator;
-        private readonly IMenuRepository _menuRepository;
+        private readonly IMenuQueryRepository _menuQueryRepository;
+        private readonly IMenuCommandRepository _menuCommandRepository;
 
-        public RollbackMenuByIdCommandHandler(RollbackMenuByIdValidator validator, IMenuRepository menuRepository)
+        public RollbackMenuByIdCommandHandler(RollbackMenuByIdValidator validator, IMenuQueryRepository menuQueryRepository, IMenuCommandRepository menuCommandRepository)
         {
             _validator = validator;
-            _menuRepository = menuRepository;
+            _menuQueryRepository = menuQueryRepository;
+            _menuCommandRepository = menuCommandRepository;
         }
 
         public async Task<IResult> Handle(RollbackMenuByIdCommandRequest request, CancellationToken cancellationToken)
@@ -33,13 +35,13 @@ namespace VkBank.Application.Features.Menu.Commands
                 return new ErrorResult(errorMessages);
             }
 
-            bool IsMenuIdExistsInMenuH = await _menuRepository.IsMenuIdExistsInMenuHAsync(request.Id, cancellationToken);
+            bool IsMenuIdExistsInMenuH = await _menuQueryRepository.IsMenuIdExistsInMenuHAsync(request.Id, cancellationToken);
             if (!IsMenuIdExistsInMenuH)
             {
                 return new ErrorResult(ResultMessages.MenuIdNotExistInHistory);
             }
 
-            int result = await _menuRepository.RollbackMenuByIdAsync(request.Id, cancellationToken);
+            int result = await _menuCommandRepository.RollbackMenuByIdAsync(request.Id, cancellationToken);
             if (result == 1)
             {
                 return new SuccessResult(ResultMessages.MenuRollbackSuccess);

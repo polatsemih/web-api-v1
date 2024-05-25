@@ -15,12 +15,12 @@ namespace VkBank.Application.Features.Menu.Queries
     public class GetMenuByIdQueryHandler : IRequestHandler<GetMenuByIdQueryRequest, IDataResult<EntityMenu>>
     {
         private readonly GetMenuByIdValidator _validator;
-        private readonly IMenuRepository _menuRepository;
+        private readonly IMenuQueryRepository _menuQueryRepository;
 
-        public GetMenuByIdQueryHandler(GetMenuByIdValidator validator, IMenuRepository menuRepository)
+        public GetMenuByIdQueryHandler(GetMenuByIdValidator validator, IMenuQueryRepository menuQueryRepository)
         {
             _validator = validator;
-            _menuRepository = menuRepository;
+            _menuQueryRepository = menuQueryRepository;
         }
 
         public async Task<IDataResult<EntityMenu>> Handle(GetMenuByIdQueryRequest request, CancellationToken cancellationToken)
@@ -32,7 +32,7 @@ namespace VkBank.Application.Features.Menu.Queries
                 return new ErrorDataResult<EntityMenu>(errorMessages);
             }
 
-            var result = await _menuRepository.GetMenuByIdAsync(request.Id, cancellationToken);
+            var result = await _menuQueryRepository.GetMenuByIdAsync(request.Id, cancellationToken);
             if (result == null)
             {
                 return new ErrorDataResult<EntityMenu>(ResultMessages.MenuNoData);
