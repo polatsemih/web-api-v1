@@ -57,29 +57,32 @@ The project follows the Onion Architecture pattern, organizing code into layers 
 
 ---
 
-### Core
-The Core includes the Application and Domain layers, which contain the business logic and domain entities respectively.
+### Application
+The Application layer is responsible for the application's commands and queries, handlers using the CQRS Pattern and MediatR pattern, and validators using FluentValidation. It also includes interfaces for Dapper and repositories, and AutoMapper for mapping command requests with entities.
 
-  #### Application
-  The Application layer is responsible for the application's commands and queries, handlers, and validators.
-
-#### Domain
-The Domain layer contains the core business entities, constants, and result classes.
+### Domain
+The Domain layer contains the entities, constants, and result classes.
 
 ### Infrastructure
-The Infrastructure includes the Infrastructure and Persistence layers, which handle the application's external services integration and data access.
+The Infrastructure layer contains the necessary infrastructure for the application, including services for logging with `ILogger`, serialization with `JsonConvert` and caching using either `IMemoryCache` or `IConnectionMultiplexer` (i.e., Redis). The Redis server is configured to run on a WSL2 Ubuntu distribution at port 6379.
 
-#### Infrastructure
-The Infrastructure layer contains the necessary infrastructure for the application, including service registrations and configuration.
+### Persistence
+The Persistence layer manages the database connection and database methods. It uses Dapper as an ORM and includes both synchronous and asynchronous methods (also with cancellation token support). It can execute commands directly from raw SQL or by calling stored procedures.
 
-#### Persistence
-The Persistence layer manages the database connection and database methods calling stored procedures using Dapper.
+### Api
+The API layer handles requests using `IMediator` and utilizes caching with `IRedisCacheService`.
 
+---
 
-### Presentation
-The Presentation includes the Api layer, which serves as the entry point for the application, handling HTTP requests and responses using MediatR.
+## Technologies Used
 
-#### Api
+* Onion Architecture
+* CQRS Pattern, MediatR Pattern
+* FluentValidation
+* AutoMapper
+* Dapper ORM, Microsoft SQL Server, Stored Procedures and Triggers
+* MemoryCache, Redis, Logger, JsonConvert
+* ASP.NET Core Web API
 
 ---
 
@@ -103,46 +106,16 @@ Leverages stored procedures and triggers in the database layer for implementing 
 
 ---
 
-## Technologies Used
-
-* ASP.NET Core Web API
-* Onion Architecture
-* CQRS Pattern
-* MediatR Pattern
-* Dapper ORM
-* FluentValidation
-* AutoMapper
-* Microsoft SQL Server
-* Stored Procedures and Triggers
+## Caching
+Utilizes `IMemoryCache` for in-memory caching and `IConnectionMultiplexer` (i.e., Redis) for distributed caching.
+The Redis server is configured to run on a WSL2 Ubuntu distribution at port 6379.
 
 ---
 
-## Onion Architecture Overview
-- Core
-  - Domain
-  - Application
-    - Dependencies:
-      - Domain
-      - AutoMapper
-      - FluentValidation
-      - FluentValidation.DependencyInjectionExtensions
-      - MediatR
-      - Microsoft.Data.SqlClient
-      - Microsoft.Extensions.Configuration
-- Infrastructure
-  - Infrastructure
-  - Persistence
-    - Dependencies:
-      - Domain
-      - Application
-      - Dapper
-      - Microsoft.Data.SqlClient
-      - Microsoft.Extensions.Configuration
-- Presentation
-  - Web Api
-    - Dependencies:
-      - Application
-      - Persistence
-      - MediatR
-      - Microsoft.Extensions.DependencyInjection
-      - Swashbuckle.AspNetCore
+## Logging
+Implements logging using `ILogger` to provide a robust and flexible logging infrastructure, helping to log data effectively.
+
+---
+
+## Serialization
+Uses `JsonConvert` for serialization and deserialization of objects to and from JSON, ensuring data is easily readable and transferrable.
