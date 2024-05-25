@@ -13,16 +13,16 @@ namespace VkBank.Application.Features.Menu.Queries
 
     public class GetAllMenuQueryHandler : IRequestHandler<GetAllMenuQueryRequest, IDataResult<List<EntityMenu>>>
     {
-        private readonly IMenuRepository _menuRepository;
+        private readonly IMenuQueryRepository _menuQueryRepository;
 
-        public GetAllMenuQueryHandler(IMenuRepository menuRepository)
+        public GetAllMenuQueryHandler(IMenuQueryRepository menuQueryRepository)
         {
-            _menuRepository = menuRepository;
+            _menuQueryRepository = menuQueryRepository;
         }
 
         public async Task<IDataResult<List<EntityMenu>>> Handle(GetAllMenuQueryRequest request, CancellationToken cancellationToken)
         {
-            IEnumerable<EntityMenu> result = await _menuRepository.GetAllMenusAsync(cancellationToken);
+            IEnumerable<EntityMenu> result = await _menuQueryRepository.GetAllMenusAsync(cancellationToken);
             if (!result.Any())
             {
                 return new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoDatas);

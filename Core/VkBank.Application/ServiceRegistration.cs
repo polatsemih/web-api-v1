@@ -8,9 +8,11 @@ namespace VkBank.Application
     {
         public static void AddApplicationDependencies(this IServiceCollection services)
         {
-            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(Assembly.GetExecutingAssembly()));
-            services.AddAutoMapper(Assembly.GetExecutingAssembly());
-            services.AddValidatorsFromAssembly(Assembly.GetExecutingAssembly());
+            var assembly = Assembly.GetExecutingAssembly();
+
+            services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
+            services.AddAutoMapper(assembly);
+            services.AddValidatorsFromAssembly(assembly);
         }
     }
 }

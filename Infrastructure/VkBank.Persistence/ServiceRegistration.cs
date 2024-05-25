@@ -10,7 +10,7 @@ namespace VkBank.Persistence
     {
         public static void AddPersistenceDependencies(this IServiceCollection services)
         {
-            services.AddScoped<IMenuRepository, DapperMenuRepository>();
+            services.AddScoped<IMenuRepository, DapperMenuCommandRepository>();
             services.AddScoped<IDapperContext, DapperContext>();
         }
     }

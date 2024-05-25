@@ -15,12 +15,14 @@ namespace VkBank.Application.Features.Menu.Commands
     public class RollbackMenusByTokenCommandHandler : IRequestHandler<RollbackMenusByTokenCommandRequest, IResult>
     {
         private readonly RollbackMenuByTokenValidator _validator;
-        private readonly IMenuRepository _menuRepository;
+        private readonly IMenuQueryRepository _menuQueryRepository;
+        private readonly IMenuCommandRepository _menuCommandRepository;
 
-        public RollbackMenusByTokenCommandHandler(RollbackMenuByTokenValidator validator, IMenuRepository menuRepository)
+        public RollbackMenusByTokenCommandHandler(RollbackMenuByTokenValidator validator, IMenuQueryRepository menuQueryRepository, IMenuCommandRepository menuCommandRepository)
         {
             _validator = validator;
-            _menuRepository = menuRepository;
+            _menuQueryRepository = menuQueryRepository;
+            _menuCommandRepository = menuCommandRepository;
         }
 
         public async Task<IResult> Handle(RollbackMenusByTokenCommandRequest request, CancellationToken cancellationToken)
@@ -32,13 +34,13 @@ namespace VkBank.Application.Features.Menu.Commands
                 return new ErrorResult(errorMessages);
             }
 
-            bool isRollbackTokenExistsInMenuH = await _menuRepository.IsRollbackTokenExistsInMenuHAsync(request.RollbackToken, cancellationToken);
+            bool isRollbackTokenExistsInMenuH = await _menuQueryRepository.IsRollbackTokenExistsInMenuHAsync(request.RollbackToken, cancellationToken);
             if (!isRollbackTokenExistsInMenuH)
             {
                 return new ErrorResult(ResultMessages.MenuRollbackTokenNotExistInHistory);
             }
 
-            int result = await _menuRepository.RollbackMenusByTokenAsync(request.RollbackToken, cancellationToken);
+            int result = await _menuCommandRepository.RollbackMenusByTokenAsync(request.RollbackToken, cancellationToken);
             if (result > 0)
             {
                 return new SuccessDataResult<int>(ResultMessages.MenuRollbackSuccess, result);
