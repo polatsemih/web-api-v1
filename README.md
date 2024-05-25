@@ -60,8 +60,8 @@ The project follows the Onion Architecture pattern, organizing code into layers 
 ### Core
 The Core includes the Application and Domain layers, which contain the business logic and domain entities respectively.
 
-#### Application
-The Application layer is responsible for the application's commands and queries, handlers, and validators.
+  #### Application
+  The Application layer is responsible for the application's commands and queries, handlers, and validators.
 
 #### Domain
 The Domain layer contains the core business entities, constants, and result classes.
