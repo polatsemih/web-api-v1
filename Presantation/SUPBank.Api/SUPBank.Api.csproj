@@ -1,0 +1,24 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net8.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="MediatR" Version="12.2.0" />
+    <PackageReference Include="Microsoft.Extensions.DependencyInjection" Version="8.0.0" />
+    <PackageReference Include="Serilog.AspNetCore" Version="8.0.1" />
+    <PackageReference Include="Serilog.Sinks.File" Version="5.0.0" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="6.6.1" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Core\SUPBank.Application\SUPBank.Application.csproj" />
+    <ProjectReference Include="..\..\Core\SUPBank.Domain\SUPBank.Domain.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\SUPBank.Infrastructure\SUPBank.Infrastructure.csproj" />
+    <ProjectReference Include="..\..\Infrastructure\SUPBank.Persistence\SUPBank.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>
