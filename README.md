@@ -1,4 +1,4 @@
-# VkBank
+# SUPBank
 An ASP.NET Web API project that showcases the implementation of advanced architectural patterns and technologies for building scalable and maintainable web applications.
 
 ---
