@@ -1,0 +1,6 @@
+@SUPBank.Api_HostAddress = http://localhost:5186
+
+GET {{SUPBank.Api_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
