@@ -1,6 +1,7 @@
 ﻿using Microsoft.Data.SqlClient;
 using Microsoft.Extensions.Configuration;
 using SUPBank.Application.Interfaces.Context;
+using SUPBank.Application.Interfaces.Services;
 using SUPBank.Domain.Contstants;
 
 namespace SUPBank.Persistence.Context
@@ -8,10 +9,12 @@ namespace SUPBank.Persistence.Context
     public class DapperContext : IDapperContext
     {
         private readonly string _connectionString;
+        private readonly ILogService<DapperContext> _logger;
 
-        public DapperContext(IConfiguration configuration)
+        public DapperContext(IConfiguration configuration, ILogService<DapperContext> logger)
         {
-            _connectionString = configuration.GetConnectionString("SqlConnection") ?? throw new InvalidOperationException(ExceptionMessages.SqlConnectionStringInvalid);
+            _connectionString = configuration.GetConnectionString("SqlConnection") ?? throw new InvalidOperationException();
+            _logger = logger;
         }
 
         private SqlConnection GetConnection()
@@ -22,45 +25,144 @@ namespace SUPBank.Persistence.Context
 
         public void Execute(Action<SqlConnection> action)
         {
-            using SqlConnection connection = GetConnection();
-            connection.Open();
-            action(connection);
+            try
+            {
+                using SqlConnection connection = GetConnection();
+                connection.Open();
+                action(connection);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ExceptionMessages.SqlException, ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ExceptionMessages.Exception, ex);
+                throw;
+            }
         }
 
         public async Task ExecuteAsync(Func<SqlConnection, Task> action)
         {
-            await using SqlConnection connection = GetConnection();
-            await connection.OpenAsync();
-            await action(connection);
+            try
+            {
+                await using SqlConnection connection = GetConnection();
+                await connection.OpenAsync();
+
+                await action(connection);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ExceptionMessages.SqlException, ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ExceptionMessages.Exception, ex);
+                throw;
+            }
         }
 
         public async Task ExecuteAsync(Func<SqlConnection, Task> action, CancellationToken cancellationToken)
         {
-            await using SqlConnection connection = GetConnection();
-            await connection.OpenAsync(cancellationToken);
-            await action(connection);
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                await using SqlConnection connection = GetConnection();
+                await connection.OpenAsync(cancellationToken);
+
+                cancellationToken.ThrowIfCancellationRequested();
+                await action(connection);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogInformation($"{ExceptionMessages.OperationCanceledException}: {ex.Message}");
+                throw;
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ExceptionMessages.SqlException, ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ExceptionMessages.Exception, ex);
+                throw;
+            }
         }
 
 
         public T Query<T>(Func<SqlConnection, T> query)
         {
-            using SqlConnection connection = GetConnection();
-            connection.Open();
-            return query(connection);
+            try
+            {
+                using SqlConnection connection = GetConnection();
+                connection.Open();
+
+                return query(connection);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ExceptionMessages.SqlException, ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ExceptionMessages.Exception, ex);
+                throw;
+            }
         }
 
         public async Task<T> QueryAsync<T>(Func<SqlConnection, Task<T>> query)
         {
-            await using SqlConnection connection = GetConnection();
-            await connection.OpenAsync();
-            return await query(connection);
+            try
+            {
+                await using SqlConnection connection = GetConnection();
+                await connection.OpenAsync();
+
+                return await query(connection);
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ExceptionMessages.SqlException, ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ExceptionMessages.Exception, ex);
+                throw;
+            }
         }
 
         public async Task<T> QueryAsync<T>(Func<SqlConnection, Task<T>> query, CancellationToken cancellationToken)
         {
-            await using SqlConnection connection = GetConnection();
-            await connection.OpenAsync(cancellationToken);
-            return await query(connection);
+            try
+            {
+                cancellationToken.ThrowIfCancellationRequested();
+
+                await using SqlConnection connection = GetConnection();
+                await connection.OpenAsync(cancellationToken);
+
+                cancellationToken.ThrowIfCancellationRequested();
+                return await query(connection);
+            }
+            catch (OperationCanceledException ex)
+            {
+                _logger.LogInformation($"{ExceptionMessages.OperationCanceledException}: {ex.Message}");
+                throw;
+            }
+            catch (SqlException ex)
+            {
+                _logger.LogError(ExceptionMessages.SqlException, ex);
+                throw;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ExceptionMessages.Exception, ex);
+                throw;
+            }
         }
     }
 }

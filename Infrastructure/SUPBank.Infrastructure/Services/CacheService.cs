@@ -1,9 +1,8 @@
 ﻿using Microsoft.Extensions.Caching.Memory;
-using SUPBank.Infrastructure.Services.Caching.Abstract;
-using SUPBank.Infrastructure.Services.Logging.Abstract;
-using SUPBank.Infrastructure.Services.Serialization.Abstract;
+using SUPBank.Application.Interfaces.Services;
+using System.Reflection;
 
-namespace SUPBank.Infrastructure.Services.Caching.Concrete
+namespace SUPBank.Infrastructure.Services
 {
     public class CacheService : ICacheService
     {
@@ -18,25 +17,25 @@ namespace SUPBank.Infrastructure.Services.Caching.Concrete
             _serializer = serializer;
         }
 
-        public T? GetCache<T>(string key, string source)
+        public T? GetCache<T>(string key)
         {
             if (_memoryCache.TryGetValue(key, out var cachedObject))
             {
-                _logger.LogInformation($"Cache hit for key: {key} from source {source}");
+                _logger.LogInformation($"Cache hit for key: {key} from source {MethodBase.GetCurrentMethod().DeclaringType.FullName}.{MethodBase.GetCurrentMethod().Name}");
                 return _serializer.Deserialize<T>((string)cachedObject);
             }
-            _logger.LogInformation($"Cache miss for key: {key} from source {source}");
+            _logger.LogInformation($"Cache miss for key: {key} from source {MethodBase.GetCurrentMethod().DeclaringType.FullName}.{MethodBase.GetCurrentMethod().Name}");
             return default;
         }
 
-        public void AddCache(string key, object value, TimeSpan duration, string source)
+        public void AddCache(string key, object value, TimeSpan duration)
         {
             var serializedValue = _serializer.Serialize(value);
 
             if (duration == TimeSpan.Zero)
             {
                 _memoryCache.Set(key, serializedValue, new MemoryCacheEntryOptions());
-                _logger.LogInformation($"Cache set for key: {key} with infinite duration from source: {source}");
+                _logger.LogInformation($"Cache set for key: {key} with infinite duration from source: {MethodBase.GetCurrentMethod().DeclaringType.FullName}.{MethodBase.GetCurrentMethod().Name}");
             }
             else
             {
@@ -44,14 +43,14 @@ namespace SUPBank.Infrastructure.Services.Caching.Concrete
                 {
                     AbsoluteExpirationRelativeToNow = duration
                 });
-                _logger.LogInformation($"Cache set for key: {key} with duration: {duration} from source: {source}");
+                _logger.LogInformation($"Cache set for key: {key} with duration: {duration} from source: {MethodBase.GetCurrentMethod().DeclaringType.FullName}.{MethodBase.GetCurrentMethod().Name}");
             }
         }
 
-        public void RemoveCache(string key, string source)
+        public void RemoveCache(string key)
         {
             _memoryCache.Remove(key);
-            _logger.LogInformation($"Cache removed for key: {key} from source {source}");
+            _logger.LogInformation($"Cache removed for key: {key} from source {MethodBase.GetCurrentMethod().DeclaringType.FullName}.{MethodBase.GetCurrentMethod().Name}");
         }
     }
 }

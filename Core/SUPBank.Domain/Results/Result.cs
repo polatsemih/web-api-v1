@@ -11,9 +11,9 @@
             Message = message;
         }
 
-        public Result(bool success)
+        public Result(bool isSuccess)
         {
-            IsSuccess = success;
+            IsSuccess = isSuccess;
         }
     }
 }

@@ -1,7 +1,7 @@
 ﻿using Newtonsoft.Json;
-using SUPBank.Infrastructure.Services.Serialization.Abstract;
+using SUPBank.Application.Interfaces.Services;
 
-namespace SUPBank.Infrastructure.Services.Serialization.Concrete
+namespace SUPBank.Infrastructure.Services
 {
     public class SerializerService : ISerializerService
     {

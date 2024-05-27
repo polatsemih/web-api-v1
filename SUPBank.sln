@@ -21,7 +21,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SUPBank.Api", "Presantation
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{0ABCEC09-621E-436C-9842-1709EB2D1304}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SUPBank.UnitTests.xUnit", "Test\SUPBank.UnitTests.xUnit\SUPBank.UnitTests.xUnit.csproj", "{3875A25E-C2E5-4031-916A-AC7E1CF3A24E}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SUPBank.UnitTests.xUnit", "Test\SUPBank.UnitTests.xUnit\SUPBank.UnitTests.xUnit.csproj", "{3875A25E-C2E5-4031-916A-AC7E1CF3A24E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{E3F04C54-653A-4CB3-BB50-27FBFA075E9F}"
+	ProjectSection(SolutionItems) = preProject
+		.editorconfig = .editorconfig
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

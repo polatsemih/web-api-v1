@@ -31,18 +31,17 @@ namespace SUPBank.Application.Features.Menu.Commands
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
-                string errorMessages = string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage));
-                return new ErrorResult(errorMessages);
+                return new ErrorResult(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
-            bool isIdExistsInMenu = await _menuQueryRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken);
-            if (!isIdExistsInMenu)
+            if (await _menuQueryRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken) == false)
             {
                 return new ErrorResult(ResultMessages.MenuIdNotExist);
             }
 
-            bool result = await _menuCommandRepository.DeleteMenuAsync(request.Id, cancellationToken);
-            return result ? new SuccessResult(ResultMessages.MenuDeleteSuccess) : new ErrorResult(ResultMessages.MenuDeleteError);
+            return await _menuCommandRepository.DeleteMenuAsync(request.Id, cancellationToken) ? 
+                new SuccessResult(ResultMessages.MenuDeleteSuccess) : 
+                new ErrorResult(ResultMessages.MenuDeleteError);
         }
     }
 }

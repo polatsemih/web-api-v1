@@ -1,13 +1,9 @@
 ﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
+using SUPBank.Application.Interfaces.Services;
 using SUPBank.Domain.Contstants;
-using SUPBank.Infrastructure.Services.Caching.Abstract;
-using SUPBank.Infrastructure.Services.Caching.Concrete;
-using SUPBank.Infrastructure.Services.Logging.Abstract;
-using SUPBank.Infrastructure.Services.Logging.Concrete;
-using SUPBank.Infrastructure.Services.Serialization.Abstract;
-using SUPBank.Infrastructure.Services.Serialization.Concrete;
+using SUPBank.Infrastructure.Services;
 
 namespace SUPBank.Infrastructure
 {

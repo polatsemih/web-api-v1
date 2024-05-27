@@ -1,4 +1,4 @@
-﻿namespace SUPBank.Infrastructure.Services.Serialization.Abstract
+﻿namespace SUPBank.Application.Interfaces.Services
 {
     public interface ISerializerService
     {

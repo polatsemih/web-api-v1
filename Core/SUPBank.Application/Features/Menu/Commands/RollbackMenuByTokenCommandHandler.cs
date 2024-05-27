@@ -30,12 +30,10 @@ namespace SUPBank.Application.Features.Menu.Commands
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
-                string errorMessages = string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage));
-                return new ErrorResult(errorMessages);
+                return new ErrorResult(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
-            bool isRollbackTokenExistsInMenuH = await _menuQueryRepository.IsRollbackTokenExistsInMenuHAsync(request.RollbackToken, cancellationToken);
-            if (!isRollbackTokenExistsInMenuH)
+            if (await _menuQueryRepository.IsRollbackTokenExistsInMenuHAsync(request.RollbackToken, cancellationToken) == false)
             {
                 return new ErrorResult(ResultMessages.MenuRollbackTokenNotExistInHistory);
             }
