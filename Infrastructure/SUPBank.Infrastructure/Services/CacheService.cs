@@ -19,12 +19,12 @@ namespace SUPBank.Infrastructure.Services
 
         public T? GetCache<T>(string key)
         {
-            if (_memoryCache.TryGetValue(key, out var cachedObject))
+            if (_memoryCache.TryGetValue(key, out string cachedObject) == true && cachedObject != null)
             {
-                _logger.LogInformation($"Cache hit for key: {key} from source {MethodBase.GetCurrentMethod().DeclaringType.FullName}.{MethodBase.GetCurrentMethod().Name}");
-                return _serializer.Deserialize<T>((string)cachedObject);
+                _logger.LogInformation($"Cache hit for key: {key} from source: {MethodBase.GetCurrentMethod().DeclaringType.FullName}.{MethodBase.GetCurrentMethod().Name}");
+                return _serializer.Deserialize<T>(cachedObject);
             }
-            _logger.LogInformation($"Cache miss for key: {key} from source {MethodBase.GetCurrentMethod().DeclaringType.FullName}.{MethodBase.GetCurrentMethod().Name}");
+            _logger.LogInformation($"Cache miss for key: {key} from source: {MethodBase.GetCurrentMethod().DeclaringType.FullName}.{MethodBase.GetCurrentMethod().Name}");
             return default;
         }
 
@@ -50,7 +50,7 @@ namespace SUPBank.Infrastructure.Services
         public void RemoveCache(string key)
         {
             _memoryCache.Remove(key);
-            _logger.LogInformation($"Cache removed for key: {key} from source {MethodBase.GetCurrentMethod().DeclaringType.FullName}.{MethodBase.GetCurrentMethod().Name}");
+            _logger.LogInformation($"Cache removed for key: {key} from source: {MethodBase.GetCurrentMethod().DeclaringType.FullName}.{MethodBase.GetCurrentMethod().Name}");
         }
     }
 }
