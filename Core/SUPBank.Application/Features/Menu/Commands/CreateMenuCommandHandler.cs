@@ -53,15 +53,15 @@ namespace SUPBank.Application.Features.Menu.Commands
 
     public class CreateMenuCommandHandler : IRequestHandler<CreateMenuCommandRequest, IResult>
     {
-        private readonly IMapper _mapper;
         private readonly CreateMenuValidator _validator;
+        private readonly IMapper _mapper;
         private readonly IMenuQueryRepository _menuQueryRepository;
         private readonly IMenuCommandRepository _menuCommandRepository;
 
-        public CreateMenuCommandHandler(IMapper mapper, CreateMenuValidator validator, IMenuQueryRepository menuQueryRepository, IMenuCommandRepository menuCommandRepository)
+        public CreateMenuCommandHandler(CreateMenuValidator validator, IMapper mapper, IMenuQueryRepository menuQueryRepository, IMenuCommandRepository menuCommandRepository)
         {
-            _mapper = mapper;
             _validator = validator;
+            _mapper = mapper;
             _menuQueryRepository = menuQueryRepository;
             _menuCommandRepository = menuCommandRepository;
         }
@@ -71,17 +71,12 @@ namespace SUPBank.Application.Features.Menu.Commands
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
-                string errorMessages = string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage));
-                return new ErrorResult(errorMessages);
+                return new ErrorResult(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
-            if (request.ParentId != 0)
+            if (request.ParentId != 0 && await _menuQueryRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken) == false)
             {
-                bool isParentIdExistsInMenu = await _menuQueryRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken);
-                if (!isParentIdExistsInMenu)
-                {
-                    return new ErrorResult(ResultMessages.MenuParentIdNotExist);
-                }
+                return new ErrorResult(ResultMessages.MenuParentIdNotExist);
             }
 
             EntityMenu menu = _mapper.Map<EntityMenu>(request);

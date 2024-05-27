@@ -14,10 +14,10 @@ namespace SUPBank.Application.Features.Menu.Queries
 
     public class GetMenuByIdWithSubMenusQueryHandler : IRequestHandler<GetMenuByIdWithSubMenusQueryRequest, IDataResult<List<EntityMenu>>>
     {
-        private readonly GetMenuByIdWithSubMenusQueryRequestValidator _validator;
+        private readonly GetMenuByIdWithSubMenusValidator _validator;
         private readonly IMenuQueryRepository _menuQueryRepository;
 
-        public GetMenuByIdWithSubMenusQueryHandler(GetMenuByIdWithSubMenusQueryRequestValidator validator, IMenuQueryRepository menuQueryRepository)
+        public GetMenuByIdWithSubMenusQueryHandler(GetMenuByIdWithSubMenusValidator validator, IMenuQueryRepository menuQueryRepository)
         {
             _validator = validator;
             _menuQueryRepository = menuQueryRepository;
@@ -28,8 +28,7 @@ namespace SUPBank.Application.Features.Menu.Queries
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
-                string errorMessages = string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage));
-                return new ErrorDataResult<List<EntityMenu>>(errorMessages);
+                return new ErrorDataResult<List<EntityMenu>>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
             var result = await _menuQueryRepository.GetMenuByIdWithSubMenusAsync(request.Id, cancellationToken);

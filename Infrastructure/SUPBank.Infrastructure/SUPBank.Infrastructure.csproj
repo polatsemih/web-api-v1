@@ -17,6 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\..\Core\SUPBank.Application\SUPBank.Application.csproj" />
     <ProjectReference Include="..\..\Core\SUPBank.Domain\SUPBank.Domain.csproj" />
   </ItemGroup>
 

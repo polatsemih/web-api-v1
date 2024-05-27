@@ -4,9 +4,11 @@ using SUPBank.Domain.Entities;
 using SUPBank.Domain.Results.Data;
 using SUPBank.Application.Features.Menu.Commands;
 using SUPBank.Application.Features.Menu.Queries;
-using SUPBank.Infrastructure.Services.Caching.Abstract;
 using SUPBank.Domain.Results;
 using SUPBank.Domain.Contstants;
+using StackExchange.Redis;
+using System.Reflection;
+using SUPBank.Application.Interfaces.Services;
 
 namespace SUPBank.Api.Controllers
 {
@@ -14,8 +16,6 @@ namespace SUPBank.Api.Controllers
     [Route("api/menu")]
     public class MenuController : ControllerBase
     {
-        private readonly string CacheKeyMenu = "CacheAllMenu";
-
         private readonly IMediator _mediator;
         private readonly IRedisCacheService _cacheService;
 
@@ -34,13 +34,13 @@ namespace SUPBank.Api.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAll([FromQuery] GetAllMenuQueryRequest request)
         {
-            var cachedMenus = _cacheService.GetCache<List<EntityMenu>>(CacheKeyMenu, "GetAllMenu");
+            var cachedMenus = _cacheService.GetCache<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
             if (cachedMenus != null)
             {
                 return Ok(new SuccessDataResult<List<EntityMenu>>(cachedMenus));
             }
 
-            var result = await _mediator.Send(request);
+            var result = await _mediator.Send(request, HttpContext.RequestAborted);
             if (!result.IsSuccess)
             {
                 return BadRequest(result);
@@ -58,7 +58,7 @@ namespace SUPBank.Api.Controllers
                 }
 
                 result.Data = result.Data.Where(menu => menu.ParentId == 0).ToList();
-                _cacheService.AddCache(CacheKeyMenu, result.Data, TimeSpan.Zero, "GetAllMenu"); // TimeSpan.FromMinutes(10) for 10 minutes caching
+                _cacheService.AddCache(CacheKeys.CacheKeyMenu, result.Data, TimeSpan.Zero); // TimeSpan.FromMinutes(10) for 10 minutes caching
             }
 
             return Ok(result);
@@ -68,13 +68,13 @@ namespace SUPBank.Api.Controllers
         /// Get menu by Id
         /// </summary>
         /// <param name="request">Menu Id</param>
-        /// <returns>A men</returns>
+        /// <returns>A menu</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpGet("get-by-id")]
         public async Task<IActionResult> GetById([FromQuery] GetMenuByIdQueryRequest request)
         {
-            var cachedMenus = _cacheService.GetCache<List<EntityMenu>>(CacheKeyMenu, "GetByIdMenu");
+            var cachedMenus = _cacheService.GetCache<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
             if (cachedMenus != null)
             {
                 var filteredMenu = cachedMenus.FirstOrDefault(menu => menu.Id == request.Id);
@@ -103,7 +103,7 @@ namespace SUPBank.Api.Controllers
                 }
             }
 
-            var result = await _mediator.Send(request);
+            var result = await _mediator.Send(request, HttpContext.RequestAborted);
             if (result.IsSuccess == false)
             {
                 return BadRequest(result);
@@ -122,7 +122,7 @@ namespace SUPBank.Api.Controllers
         [HttpGet("get-by-id-with-submenus")]
         public async Task<IActionResult> GetByIdWitSubMenus([FromQuery] GetMenuByIdWithSubMenusQueryRequest request)
         {
-            var cachedMenus = _cacheService.GetCache<List<EntityMenu>>(CacheKeyMenu, "GetByIdMenuWihSubMenus");
+            var cachedMenus = _cacheService.GetCache<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
             if (cachedMenus != null)
             {
                 var filteredMenu = cachedMenus.FirstOrDefault(menu => menu.Id == request.Id);
@@ -132,7 +132,7 @@ namespace SUPBank.Api.Controllers
                 }
             }
 
-            var result = await _mediator.Send(request);
+            var result = await _mediator.Send(request, HttpContext.RequestAborted);
             if (result.IsSuccess == false)
             {
                 return BadRequest(result);
@@ -166,7 +166,7 @@ namespace SUPBank.Api.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] SearchMenuQueryRequest request)
         {
-            var cachedMenus = _cacheService.GetCache<List<EntityMenu>>(CacheKeyMenu, "SearchMenu");
+            var cachedMenus = _cacheService.GetCache<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
             if (cachedMenus != null)
             {
                 var filteredMenus = cachedMenus
@@ -199,7 +199,7 @@ namespace SUPBank.Api.Controllers
                 }
             }
 
-            var result = await _mediator.Send(request);
+            var result = await _mediator.Send(request, HttpContext.RequestAborted);
             if (result.IsSuccess == false)
             {
                 return BadRequest(result);
@@ -216,13 +216,13 @@ namespace SUPBank.Api.Controllers
         [HttpGet("remove-cache")]
         public IActionResult RemoveCache()
         {
-            var cachedMenus = _cacheService.GetCache<List<EntityMenu>>(CacheKeyMenu, "RemoveMenuCache");
+            var cachedMenus = _cacheService.GetCache<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
             if (cachedMenus == null)
             {
                 return Ok(new ErrorResult(ResultMessages.MenuCacheNotExist));
             }
 
-            _cacheService.RemoveCache(CacheKeyMenu, "RemoveMenuCache");
+            _cacheService.RemoveCache(CacheKeys.CacheKeyMenu);
             return Ok(new SuccessResult(ResultMessages.MenuCacheRemoved));
         }
 
@@ -236,13 +236,13 @@ namespace SUPBank.Api.Controllers
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateMenuCommandRequest request)
         {
-            var result = await _mediator.Send(request);
+            var result = await _mediator.Send(request, HttpContext.RequestAborted);
             if (result.IsSuccess == false)
             {
                 return BadRequest(result);
             }
 
-            _cacheService.RemoveCache(CacheKeyMenu, "CreateMenu");
+            _cacheService.RemoveCache(CacheKeys.CacheKeyMenu);
             return Ok(result);
         }
 
@@ -256,13 +256,13 @@ namespace SUPBank.Api.Controllers
         [HttpPut("update")]
         public async Task<IActionResult> Update([FromBody] UpdateMenuCommandRequest request)
         {
-            var result = await _mediator.Send(request);
+            var result = await _mediator.Send(request, HttpContext.RequestAborted);
             if (result.IsSuccess == false)
             {
                 return BadRequest(result);
             }
 
-            _cacheService.RemoveCache(CacheKeyMenu, "UpdateMenu");
+            _cacheService.RemoveCache(CacheKeys.CacheKeyMenu);
             return Ok(result);
         }
 
@@ -276,13 +276,13 @@ namespace SUPBank.Api.Controllers
         [HttpDelete("delete")]
         public async Task<IActionResult> Delete([FromBody] DeleteMenuCommandRequest request)
         {
-            var result = await _mediator.Send(request);
+            var result = await _mediator.Send(request, HttpContext.RequestAborted);
             if (result.IsSuccess == false)
             {
                 return BadRequest(result);
             }
 
-            _cacheService.RemoveCache(CacheKeyMenu, "DeleteMenu");
+            _cacheService.RemoveCache(CacheKeys.CacheKeyMenu);
             return Ok(result);
         }
 
@@ -296,7 +296,7 @@ namespace SUPBank.Api.Controllers
         [HttpPut("rollback-by-id")]
         public async Task<IActionResult> RolllbackById([FromBody] RollbackMenuByIdCommandRequest request)
         {
-            var result = await _mediator.Send(request);
+            var result = await _mediator.Send(request, HttpContext.RequestAborted);
             if (result.IsSuccess == false)
             {
                 return BadRequest(result);
@@ -314,7 +314,7 @@ namespace SUPBank.Api.Controllers
         [HttpPut("rollback-by-screencode")]
         public async Task<IActionResult> RolllbackByScreenCode([FromBody] RollbackMenuByScreenCodeCommandRequest request)
         {
-            var result = await _mediator.Send(request);
+            var result = await _mediator.Send(request, HttpContext.RequestAborted);
             if (result.IsSuccess == false)
             {
                 return BadRequest(result);
@@ -332,7 +332,7 @@ namespace SUPBank.Api.Controllers
         [HttpPut("rollback-by-token")]
         public async Task<IActionResult> RolllbackByToken([FromBody] RollbackMenusByTokenCommandRequest request)
         {
-            var result = await _mediator.Send(request);
+            var result = await _mediator.Send(request, HttpContext.RequestAborted);
             if (result.IsSuccess == false)
             {
                 return BadRequest(result);

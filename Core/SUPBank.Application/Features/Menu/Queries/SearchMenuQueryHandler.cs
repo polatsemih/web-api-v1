@@ -32,8 +32,7 @@ namespace SUPBank.Application.Features.Menu.Queries
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
-                string errorMessages = string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage));
-                return new ErrorResult(errorMessages);
+                return new ErrorResult(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
             IEnumerable<EntityMenu> result = await _menuQueryRepository.SearchMenusAsync(request.Keyword, cancellationToken);

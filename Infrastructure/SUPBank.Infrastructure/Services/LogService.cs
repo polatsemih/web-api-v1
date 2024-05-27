@@ -1,7 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
-using SUPBank.Infrastructure.Services.Logging.Abstract;
+using SUPBank.Application.Interfaces.Services;
 
-namespace SUPBank.Infrastructure.Services.Logging.Concrete
+namespace SUPBank.Infrastructure.Services
 {
     public class LogService<T> : ILogService<T>
     {
@@ -27,7 +27,7 @@ namespace SUPBank.Infrastructure.Services.Logging.Concrete
             _logger.LogError(message);
         }
 
-        public void LogError(Exception exception, string message)
+        public void LogError(string message, Exception exception)
         {
             _logger.LogError(exception, message);
         }
@@ -47,7 +47,7 @@ namespace SUPBank.Infrastructure.Services.Logging.Concrete
             _logger.LogCritical(message);
         }
 
-        public void LogCritical(Exception exception, string message)
+        public void LogCritical(string message, Exception exception)
         {
             _logger.LogCritical(exception, message);
         }

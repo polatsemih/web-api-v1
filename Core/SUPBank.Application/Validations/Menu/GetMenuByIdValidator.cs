@@ -12,9 +12,9 @@ namespace SUPBank.Application.Validations.Menu
         }
     }
 
-    public class GetMenuByIdWithSubMenusQueryRequestValidator : AbstractValidator<GetMenuByIdWithSubMenusQueryRequest>
+    public class GetMenuByIdWithSubMenusValidator : AbstractValidator<GetMenuByIdWithSubMenusQueryRequest>
     {
-        public GetMenuByIdWithSubMenusQueryRequestValidator()
+        public GetMenuByIdWithSubMenusValidator()
         {
             RuleFor(r => r.Id).ValidateId();
         }

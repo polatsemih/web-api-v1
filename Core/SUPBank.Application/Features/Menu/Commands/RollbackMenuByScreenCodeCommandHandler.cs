@@ -31,12 +31,10 @@ namespace SUPBank.Application.Features.Menu.Commands
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
-                string errorMessages = string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage));
-                return new ErrorResult(errorMessages);
+                return new ErrorResult(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
-            bool isScreenCodeExistsInMenuH = await _menuQueryRepository.IsScreenCodeExistsInMenuHAsync(request.ScreenCode, cancellationToken);
-            if (!isScreenCodeExistsInMenuH)
+            if (await _menuQueryRepository.IsScreenCodeExistsInMenuHAsync(request.ScreenCode, cancellationToken) == false)
             {
                 return new ErrorResult(ResultMessages.MenuScreenCodeNotExistInHistory);
             }

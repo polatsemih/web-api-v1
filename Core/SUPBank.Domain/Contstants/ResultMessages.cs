@@ -28,6 +28,6 @@
         public const string MenuRollbackNoChanges = "No changes. The menu is the same as the history.";
 
         public const string MenuCacheNotExist = "Menu cache already not exist";
-        public const string MenuCacheRemoved = "Menu Cache removed";
+        public const string MenuCacheRemoved = "Menu cache removed";
     }
 }
