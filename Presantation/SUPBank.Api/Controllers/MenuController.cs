@@ -7,7 +7,6 @@ using SUPBank.Application.Features.Menu.Queries;
 using SUPBank.Domain.Results;
 using SUPBank.Domain.Contstants;
 using StackExchange.Redis;
-using System.Reflection;
 using SUPBank.Application.Interfaces.Services;
 
 namespace SUPBank.Api.Controllers
