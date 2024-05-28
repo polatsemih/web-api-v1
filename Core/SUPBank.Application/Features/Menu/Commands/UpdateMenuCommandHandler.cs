@@ -25,7 +25,7 @@ namespace SUPBank.Application.Features.Menu.Commands
         [MaxLength(LengthLimits.MenuNameMaxLength)]
         public required string Name_EN { get; set; }
 
-        [Range(10001, int.MaxValue)]
+        [Range(LengthLimits.MenuScreenCodeMinRange, int.MaxValue)]
         public required int ScreenCode { get; set; }
 
         [Range(1, byte.MaxValue)]

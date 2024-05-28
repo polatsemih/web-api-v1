@@ -19,15 +19,21 @@ builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-var env = builder.Environment; // launchSettings.json "ASPNETCORE_ENVIRONMENT" => `Development` || `Production`
-builder.Configuration
-    .SetBasePath(env.ContentRootPath) // setting local or server path dynamically => `C:\Users\SUP\Desktop\src\SUPBank\Presantation\SUPBank.Api`
-    .AddJsonFile("appsettings.json", optional: false)
-    .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true);
-
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
+string? environment = builder.Configuration["Environment"];
+if (string.IsNullOrEmpty(environment))
+{
+    throw new InvalidOperationException("Environment not specified in appsettings.json");
+}
+builder.Environment.EnvironmentName = environment;
+builder.Configuration
+    .SetBasePath(builder.Environment.ContentRootPath) // setting local or server path dynamically => `C:\Users\SUP\Desktop\src\SUPBank\Presantation\SUPBank.Api`
+    .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+    .AddJsonFile($"appsettings.{environment}.json", optional: false, reloadOnChange: true)
+    .AddEnvironmentVariables();
+
+if (environment == "Development")
 {
     app.UseSwagger();
     app.UseSwaggerUI();

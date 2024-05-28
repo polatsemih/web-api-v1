@@ -9,7 +9,7 @@ namespace SUPBank.Application.Features.Menu.Commands
 {
     public class RollbackMenuByScreenCodeCommandRequest : IRequest<IResult>
     {
-        [Range(10001, int.MaxValue)]
+        [Range(LengthLimits.MenuScreenCodeMinRange, int.MaxValue)]
         public required int ScreenCode { get; set; }
     }
 
