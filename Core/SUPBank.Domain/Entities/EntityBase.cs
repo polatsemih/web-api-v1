@@ -20,6 +20,6 @@
         /// <summary>
         /// The date and time when the entity was last modified
         /// </summary>
-        public DateTime LastModifiedDate { get; set; }
+        public DateTime? LastModifiedDate { get; set; }
     }
 }

@@ -17,15 +17,15 @@ namespace SUPBank.Application.Validations.Menu
         {
             return ruleBuilder
                 .NotEmpty().WithMessage(ValidationMessages.MenuNameEmpty)
-                .MinimumLength(LengthLimits.MenuNameMinLength).WithMessage(ValidationMessages.MenuNameMinLength)
-                .MaximumLength(LengthLimits.MenuNameMaxLength).WithMessage(ValidationMessages.MenuNameMaxLength);
+                .MinimumLength(LengthLimits.MenuNameMinLength).WithMessage(string.Format(ValidationMessages.MenuNameMinLength, LengthLimits.MenuNameMinLength))
+                .MaximumLength(LengthLimits.MenuNameMaxLength).WithMessage(string.Format(ValidationMessages.MenuNameMaxLength, LengthLimits.MenuNameMaxLength));
         }
 
         public static IRuleBuilderOptions<T, int> ValidateMenuScreenCode<T>(this IRuleBuilder<T, int> ruleBuilder)
         {
             return ruleBuilder
                 .NotEmpty().WithMessage(ValidationMessages.MenuScreenCodeEmpty)
-                .GreaterThan(10000).WithMessage(ValidationMessages.MenuScreenCodeMinRange);
+                .GreaterThan(LengthLimits.MenuScreenCodeMinRange).WithMessage(string.Format(ValidationMessages.MenuScreenCodeMinRange, LengthLimits.MenuScreenCodeMinRange));
         }
 
         public static IRuleBuilderOptions<T, byte> ValidateMenuType<T>(this IRuleBuilder<T, byte> ruleBuilder)
@@ -45,15 +45,15 @@ namespace SUPBank.Application.Validations.Menu
         {
             return ruleBuilder
                 .NotEmpty().WithMessage(ValidationMessages.MenuKeywordEmpty)
-                .MinimumLength(LengthLimits.MenuKeywordMinLength).WithMessage(ValidationMessages.MenuKeywordMinLength)
-                .MaximumLength(LengthLimits.MenuKeywordMaxLength).WithMessage(ValidationMessages.MenuKeywordMaxLength);
+                .MinimumLength(LengthLimits.MenuKeywordMinLength).WithMessage(string.Format(ValidationMessages.MenuKeywordMinLength, LengthLimits.MenuKeywordMinLength))
+                .MaximumLength(LengthLimits.MenuKeywordMaxLength).WithMessage(string.Format(ValidationMessages.MenuKeywordMaxLength, LengthLimits.MenuKeywordMaxLength));
         }
 
         public static IRuleBuilderOptions<T, string?> ValidateMenuIcon<T>(this IRuleBuilder<T, string?> ruleBuilder)
         {
             return ruleBuilder
-                .MinimumLength(LengthLimits.MenuIconMinLength).When(icon => icon != null).WithMessage(ValidationMessages.MenuIconMinLength)
-                .MaximumLength(LengthLimits.MenuIconMaxLength).When(icon => icon != null).WithMessage(ValidationMessages.MenuIconMaxLength);
+                .MinimumLength(LengthLimits.MenuIconMinLength).When(icon => icon != null).WithMessage(string.Format(ValidationMessages.MenuIconMinLength, LengthLimits.MenuIconMinLength))
+                .MaximumLength(LengthLimits.MenuIconMaxLength).When(icon => icon != null).WithMessage(string.Format(ValidationMessages.MenuIconMaxLength, LengthLimits.MenuIconMaxLength));
         }
 
         public static IRuleBuilderOptions<T, bool> ValidateMenuIsGroup<T>(this IRuleBuilder<T, bool> ruleBuilder)
