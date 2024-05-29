@@ -1,41 +1,43 @@
 {
-  "$schema": "http://json.schemastore.org/launchsettings.json",
   "profiles": {
     "SUPBank.Development": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "http://localhost:5000",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development"
-      }
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5000"
     },
     "SUPBank.Production": {
       "commandName": "Project",
-      "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
-      "applicationUrl": "http://localhost:5001",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Production"
-      }
+      },
+      "dotnetRunMessages": true,
+      "applicationUrl": "http://localhost:5001"
     },
     "WSL": {
       "commandName": "Project",
-      "distributionName": "Ubuntu",
-      "dotnetRunMessages": true,
       "launchBrowser": true,
       "launchUrl": "swagger",
       "environmentVariables": {
         "ASPNETCORE_ENVIRONMENT": "Development",
         "ASPNETCORE_URLS": "http://localhost:5000"
-      }
+      },
+      "distributionName": "Ubuntu",
+      "dotnetRunMessages": true
     },
     "IIS Express": {
       "commandName": "IISExpress",
       "launchBrowser": true,
       "launchUrl": "swagger",
+      "environmentVariables": {
+        "ASPNETCORE_ENVIRONMENT": "Production"
+      },
       "iisSettings": {
         "windowsAuthentication": false,
         "anonymousAuthentication": true,
@@ -43,10 +45,16 @@
           "applicationUrl": "http://localhost:1861",
           "sslPort": 0
         }
-      },
-      "environmentVariables": {
-        "ASPNETCORE_ENVIRONMENT": "Production"
       }
+    }
+  },
+  "$schema": "http://json.schemastore.org/launchsettings.json",
+  "iisSettings": {
+    "windowsAuthentication": false,
+    "anonymousAuthentication": true,
+    "iisExpress": {
+      "applicationUrl": "http://localhost:56212/",
+      "sslPort": 44331
     }
   }
 }
