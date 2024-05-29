@@ -8,7 +8,7 @@ using SUPBank.Domain.Results;
 using SUPBank.Domain.Contstants;
 using StackExchange.Redis;
 using SUPBank.Application.Interfaces.Services;
-using Microsoft.IdentityModel.Tokens;
+using System.Reflection;
 
 namespace SUPBank.Api.Controllers
 {
@@ -34,7 +34,7 @@ namespace SUPBank.Api.Controllers
         [HttpGet("all")]
         public async Task<IActionResult> GetAll([FromQuery] GetAllMenuQueryRequest request)
         {
-            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
+            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu, MethodBase.GetCurrentMethod().DeclaringType.FullName + MethodBase.GetCurrentMethod().Name);
             if (cachedMenus != null)
             {
                 return Ok(new SuccessDataResult<List<EntityMenu>>(cachedMenus));
@@ -46,7 +46,7 @@ namespace SUPBank.Api.Controllers
                 return BadRequest(result);
             }
 
-            if (result.Data != null && result.Data.Any()) // !result.Data.IsNullOrEmpty() 
+            if (result.Data != null && result.Data.Any())
             {
                 Dictionary<long, EntityMenu> menuDictionary = result.Data.ToDictionary(menu => menu.Id);
                 foreach (var menu in result.Data)
@@ -58,7 +58,7 @@ namespace SUPBank.Api.Controllers
                 }
 
                 result.Data = result.Data.Where(menu => menu.ParentId == 0).ToList();
-                await _cacheService.AddCacheAsync(CacheKeys.CacheKeyMenu, result.Data, TimeSpan.Zero); // TimeSpan.FromMinutes(10) for 10 minutes caching
+                await _cacheService.AddCacheAsync(CacheKeys.CacheKeyMenu, result.Data, TimeSpan.Zero, MethodBase.GetCurrentMethod().DeclaringType.FullName + MethodBase.GetCurrentMethod().Name); // TimeSpan.FromMinutes(10) for 10 minutes caching
             }
 
             return Ok(result);
@@ -74,7 +74,7 @@ namespace SUPBank.Api.Controllers
         [HttpGet("get-by-id")]
         public async Task<IActionResult> GetById([FromQuery] GetMenuByIdQueryRequest request)
         {
-            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
+            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu, MethodBase.GetCurrentMethod().DeclaringType.FullName + MethodBase.GetCurrentMethod().Name);
             if (cachedMenus != null)
             {
                 var filteredMenu = cachedMenus.FirstOrDefault(menu => menu.Id == request.Id);
@@ -122,7 +122,7 @@ namespace SUPBank.Api.Controllers
         [HttpGet("get-by-id-with-submenus")]
         public async Task<IActionResult> GetByIdWitSubMenus([FromQuery] GetMenuByIdWithSubMenusQueryRequest request)
         {
-            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
+            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu, MethodBase.GetCurrentMethod().DeclaringType.FullName + MethodBase.GetCurrentMethod().Name);
             if (cachedMenus != null)
             {
                 var filteredMenu = cachedMenus.FirstOrDefault(menu => menu.Id == request.Id);
@@ -166,7 +166,7 @@ namespace SUPBank.Api.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] SearchMenuQueryRequest request)
         {
-            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
+            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu, MethodBase.GetCurrentMethod().DeclaringType.FullName + MethodBase.GetCurrentMethod().Name);
             if (cachedMenus != null)
             {
                 var filteredMenus = cachedMenus
@@ -216,13 +216,13 @@ namespace SUPBank.Api.Controllers
         [HttpGet("remove-cache")]
         public async Task<IActionResult> RemoveCache()
         {
-            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
+            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu, MethodBase.GetCurrentMethod().DeclaringType.FullName + MethodBase.GetCurrentMethod().Name);
             if (cachedMenus == null)
             {
                 return Ok(new ErrorResult(ResultMessages.MenuCacheNotExist));
             }
 
-            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu);
+            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu, MethodBase.GetCurrentMethod().DeclaringType.FullName + MethodBase.GetCurrentMethod().Name);
             return Ok(new SuccessResult(ResultMessages.MenuCacheRemoved));
         }
 
@@ -242,7 +242,7 @@ namespace SUPBank.Api.Controllers
                 return BadRequest(result);
             }
 
-            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu);
+            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu, MethodBase.GetCurrentMethod().DeclaringType.FullName + MethodBase.GetCurrentMethod().Name);
             return Ok(result);
         }
 
@@ -262,7 +262,7 @@ namespace SUPBank.Api.Controllers
                 return BadRequest(result);
             }
 
-            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu);
+            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu, MethodBase.GetCurrentMethod().DeclaringType.FullName + MethodBase.GetCurrentMethod().Name);
             return Ok(result);
         }
 
@@ -282,7 +282,7 @@ namespace SUPBank.Api.Controllers
                 return BadRequest(result);
             }
 
-            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu);
+            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu, MethodBase.GetCurrentMethod().DeclaringType.FullName + MethodBase.GetCurrentMethod().Name);
             return Ok(result);
         }
 

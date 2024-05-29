@@ -3,13 +3,14 @@ using SUPBank.Application.Interfaces.Repositories;
 using SUPBank.Application.Validations.Menu;
 using SUPBank.Domain.Contstants;
 using SUPBank.Domain.Entities;
-using SUPBank.Domain.Results;
 using SUPBank.Domain.Results.Data;
+using System.ComponentModel.DataAnnotations;
 
 namespace SUPBank.Application.Features.Menu.Queries
 {
     public class GetMenuByIdQueryRequest : IRequest<IDataResult<EntityMenu>>
     {
+        [Range(1, long.MaxValue)]
         public long Id { get; set; }
     }
 
@@ -29,13 +30,13 @@ namespace SUPBank.Application.Features.Menu.Queries
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
-                return new ErrorDataResult<EntityMenu>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)), new EntityMenu());
+                return new ErrorDataResult<EntityMenu>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
             var result = await _menuQueryRepository.GetMenuByIdAsync(request.Id, cancellationToken);
             if (result == null)
             {
-                return new ErrorDataResult<EntityMenu>(ResultMessages.MenuNoData, new EntityMenu());
+                return new ErrorDataResult<EntityMenu>(ResultMessages.MenuNoData);
             }
             return new SuccessDataResult<EntityMenu>(result);
         }
