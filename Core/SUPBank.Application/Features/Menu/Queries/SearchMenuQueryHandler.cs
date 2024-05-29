@@ -6,17 +6,18 @@ using SUPBank.Domain.Contstants;
 using SUPBank.Domain.Entities;
 using SUPBank.Domain.Results;
 using SUPBank.Domain.Results.Data;
+using Microsoft.IdentityModel.Tokens;
 
 namespace SUPBank.Application.Features.Menu.Queries
 {
-    public class SearchMenuQueryRequest() : IRequest<IResult>
+    public class SearchMenuQueryRequest() : IRequest<IDataResult<List<EntityMenu>>>
     {
         [MinLength(LengthLimits.MenuKeywordMinLength)]
         [MaxLength(LengthLimits.MenuKeywordMaxLength)]
         public required string Keyword { get; set; }
     }
 
-    public class SearchMenuQueryHandler : IRequestHandler<SearchMenuQueryRequest, IResult>
+    public class SearchMenuQueryHandler : IRequestHandler<SearchMenuQueryRequest, IDataResult<List<EntityMenu>>>
     {
         private readonly SearchMenuValidator _validator;
         private readonly IMenuQueryRepository _menuQueryRepository;
@@ -27,18 +28,18 @@ namespace SUPBank.Application.Features.Menu.Queries
             _menuQueryRepository = menuQueryRepository;
         }
 
-        public async Task<IResult> Handle(SearchMenuQueryRequest request, CancellationToken cancellationToken)
+        public async Task<IDataResult<List<EntityMenu>>> Handle(SearchMenuQueryRequest request, CancellationToken cancellationToken)
         {
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
-                return new ErrorResult(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
+                return new ErrorDataResult<List<EntityMenu>>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)), new List<EntityMenu>());
             }
 
-            IEnumerable<EntityMenu> result = await _menuQueryRepository.SearchMenusAsync(request.Keyword, cancellationToken);
-            if (!result.Any())
+            var result = await _menuQueryRepository.SearchMenusAsync(request.Keyword, cancellationToken);
+            if (result.IsNullOrEmpty())
             {
-                return new ErrorResult(ResultMessages.MenuNoDatas);
+                return new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoDatas, new List<EntityMenu>());
             }
             return new SuccessDataResult<List<EntityMenu>>(result.ToList());
         }

@@ -1,4 +1,5 @@
 ﻿using MediatR;
+using Microsoft.IdentityModel.Tokens;
 using SUPBank.Application.Interfaces.Repositories;
 using SUPBank.Domain.Contstants;
 using SUPBank.Domain.Entities;
@@ -22,8 +23,8 @@ namespace SUPBank.Application.Features.Menu.Queries
 
         public async Task<IDataResult<List<EntityMenu>>> Handle(GetAllMenuQueryRequest request, CancellationToken cancellationToken)
         {
-            IEnumerable<EntityMenu> result = await _menuQueryRepository.GetAllMenusAsync(cancellationToken);
-            if (!result.Any())
+            var result = await _menuQueryRepository.GetAllMenusAsync(cancellationToken);
+            if (result.IsNullOrEmpty())
             {
                 return new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoDatas);
             }

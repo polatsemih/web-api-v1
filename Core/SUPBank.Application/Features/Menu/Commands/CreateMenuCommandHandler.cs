@@ -10,7 +10,7 @@ using SUPBank.Domain.Entities;
 
 namespace SUPBank.Application.Features.Menu.Commands
 {
-    public class CreateMenuCommandRequest : IRequest<IResult>
+    public class CreateMenuCommandRequest : IRequest<IDataResult<long>>
     {
         [Range(0, long.MaxValue)]
         public required long ParentId { get; set; }
@@ -51,7 +51,7 @@ namespace SUPBank.Application.Features.Menu.Commands
         public required bool IsActive { get; set; }
     }
 
-    public class CreateMenuCommandHandler : IRequestHandler<CreateMenuCommandRequest, IResult>
+    public class CreateMenuCommandHandler : IRequestHandler<CreateMenuCommandRequest, IDataResult<long>>
     {
         private readonly CreateMenuValidator _validator;
         private readonly IMapper _mapper;
@@ -66,28 +66,28 @@ namespace SUPBank.Application.Features.Menu.Commands
             _menuCommandRepository = menuCommandRepository;
         }
 
-        public async Task<IResult> Handle(CreateMenuCommandRequest request, CancellationToken cancellationToken)
+        public async Task<IDataResult<long>> Handle(CreateMenuCommandRequest request, CancellationToken cancellationToken)
         {
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
-                return new ErrorResult(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
+                return new ErrorDataResult<long>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
             if (request.ParentId != 0 && await _menuQueryRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken) == false)
             {
-                return new ErrorResult(ResultMessages.MenuParentIdNotExist);
+                return new ErrorDataResult<long>(ResultMessages.MenuParentIdNotExist);
             }
 
             EntityMenu menu = _mapper.Map<EntityMenu>(request);
 
             long? menuId = await _menuCommandRepository.CreateMenuAndGetIdAsync(menu, cancellationToken);
-            if (menuId == null)
+            if (!menuId.HasValue)
             {
-                return new ErrorResult(ResultMessages.MenuCreateError);
+                return new ErrorDataResult<long>(ResultMessages.MenuCreateError);
             }
 
-            return new SuccessDataResult<long?>(ResultMessages.MenuCreateSuccess, menuId);
+            return new SuccessDataResult<long>(ResultMessages.MenuCreateSuccess, menuId.Value);
         }
     }
 }

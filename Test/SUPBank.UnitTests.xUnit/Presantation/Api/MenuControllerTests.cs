@@ -7,6 +7,7 @@ using SUPBank.Application.Interfaces.Services;
 using SUPBank.Domain.Contstants;
 using SUPBank.Domain.Entities;
 using SUPBank.Domain.Results.Data;
+using SUPBank.UnitTests.xUnit.Utilities.Helpers;
 using Xunit;
 
 namespace SUPBank.UnitTests.xUnit.Presantation.Api
@@ -22,6 +23,8 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
             _mediatorMock = new Mock<IMediator>();
             _cacheServiceMock = new Mock<IRedisCacheService>();
             _controller = new MenuController(_mediatorMock.Object, _cacheServiceMock.Object);
+
+            ControllerTestHelper.SetHttpContext(_controller);
         }
 
         [Fact]
@@ -30,93 +33,50 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
             // Arrange
             var cachedMenus = new List<EntityMenu>
             {
-                new EntityMenu
-                {
-                    Id = 1,
-                    ParentId = 0,
-                    Name_TR = "Profilim",
-                    Name_EN = "My Profile",
-                    ScreenCode = 10000,
-                    Type = 10,
-                    Priority = 0,
-                    Keyword = "profilim, profile",
-                    Icon = "asdsadasd",
-                    IsGroup = false,
-                    IsNew = false,
-                    NewStartDate = null,
-                    NewEndDate = null,
-                    SubMenus = new List<EntityMenu>
-                    {
-                        new EntityMenu
-                        {
-                            Id = 4,
-                            ParentId = 1,
-                            Name_TR = "Gelir ve Çalışma Bilgileri",
-                            Name_EN = "Income and Work Information",
-                            ScreenCode = 10003,
-                            Type = 10,
-                            Priority = 100,
-                            Keyword = "gelir, çalışma bilgileri, income, work information",
-                            Icon = "asdsadasd",
-                            IsGroup = false,
-                            IsNew = false,
-                            NewStartDate = null,
-                            NewEndDate = null,
-                            SubMenus = new List<EntityMenu>(),
-                            IsActive = true,
-                            CreatedDate = DateTime.Parse("2024-05-17T14:47:39.04"),
-                            LastModifiedDate = DateTime.MinValue
-                        },
-                        new EntityMenu
-                        {
-                            Id = 10,
-                            ParentId = 1,
-                            Name_TR = "Contract/Documents",
-                            Name_EN = "Contract/Documents",
-                            ScreenCode = 10009,
-                            Type = 10,
-                            Priority = 400,
-                            Keyword = "sözleşme, belgeler, contract, documents",
-                            Icon = "asdsadasd",
-                            IsGroup = false,
-                            IsNew = false,
-                            NewStartDate = null,
-                            NewEndDate = null,
-                            SubMenus = new List<EntityMenu>
-                            {
-                                new EntityMenu
-                                {
-                                    Id = 16,
-                                    ParentId = 10,
-                                    Name_TR = "Belgelerim",
-                                    Name_EN = "My Documents",
-                                    ScreenCode = 10015,
-                                    Type = 10,
-                                    Priority = 100,
-                                    Keyword = "belgelerim, documents",
-                                    Icon = "asdsadasd",
-                                    IsGroup = false,
-                                    IsNew = false,
-                                    NewStartDate = null,
-                                    NewEndDate = null,
-                                    SubMenus = new List<EntityMenu>(),
-                                    IsActive = true,
-                                    CreatedDate = DateTime.Parse("2024-05-17T14:47:39.043"),
-                                    LastModifiedDate = DateTime.MinValue
-                                }
-                            },
-                            IsActive = true,
-                            CreatedDate = DateTime.Parse("2024-05-17T14:47:39.04"),
-                            LastModifiedDate = DateTime.MinValue
-                        }
-                    },
-                    IsActive = true,
-                    CreatedDate = DateTime.Parse("2024-05-17T14:47:39.04"),
-                    LastModifiedDate = DateTime.MinValue
-                }
+                new() { Id = 1, ParentId = 0, Name_EN = "Menu1", SubMenus = [
+                    new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", SubMenus = [] },
+                    new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", SubMenus = [
+                        new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", SubMenus = [] }
+                    ] }
+                ] },
+                new() { Id = 2, ParentId = 0, Name_EN = "Menu2", SubMenus =[] }
             };
 
-            _cacheServiceMock.Setup(c => c.GetCache<List<EntityMenu>>(CacheKeys.CacheKeyMenu)).Returns(cachedMenus);
+
+            _cacheServiceMock.Setup(c => c.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu)).ReturnsAsync(cachedMenus);
+
+            var request = new GetAllMenuQueryRequest();
+
+            // Act
+            var result = await _controller.GetAll(request) as ObjectResult;
+
+            // Assert
+            Assert.NotNull(result);
+            Assert.Equal(200, result.StatusCode);
+
+            var successDataResult = result.Value as SuccessDataResult<List<EntityMenu>>;
+            Assert.NotNull(successDataResult);
+            Assert.True(successDataResult.IsSuccess);
+            Assert.Equal(cachedMenus, successDataResult.Data);
+        }
+
+        [Fact]
+        public async Task GetAll_ShouldReturnOk_WhenCacheIsEmptyAndMediatorReturnsSuccessWithData()
+        {
+            // Arrange
+            List<EntityMenu> cachedMenus = null;
+            var menusFromMediator = new List<EntityMenu>
+            {
+                new() { Id = 1, ParentId = 0, Name_EN = "Menu1", SubMenus = new List<EntityMenu>() },
+                new() { Id = 2, ParentId = 0, Name_EN = "Menu2", SubMenus = new List<EntityMenu>() },
+                new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", SubMenus = new List<EntityMenu>() },
+                new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", SubMenus = new List<EntityMenu>() },
+                new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", SubMenus = new List<EntityMenu>() }
+            };
+
+            _cacheServiceMock.Setup(c => c.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu)).ReturnsAsync(cachedMenus);
+            _mediatorMock.Setup(m => m.Send(It.IsAny<GetAllMenuQueryRequest>(), It.IsAny<CancellationToken>()))
+                .ReturnsAsync(new SuccessDataResult<List<EntityMenu>>(menusFromMediator));
 
             var request = new GetAllMenuQueryRequest();
 
@@ -126,12 +86,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
             // Assert
             Assert.NotNull(result);
             Assert.Equal(200, result.StatusCode);
+
             var successDataResult = result.Value as SuccessDataResult<List<EntityMenu>>;
             Assert.NotNull(successDataResult);
             Assert.True(successDataResult.IsSuccess);
-            Assert.Equal(cachedMenus, successDataResult.Data);
+            Assert.Equal(menusFromMediator.Where(menu => menu.ParentId == 0), successDataResult.Data);
         }
-
 
 
 

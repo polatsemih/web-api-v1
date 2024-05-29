@@ -1,9 +1,12 @@
 ﻿using MediatR;
+using Microsoft.IdentityModel.Tokens;
 using SUPBank.Application.Interfaces.Repositories;
 using SUPBank.Application.Validations.Menu;
 using SUPBank.Domain.Contstants;
 using SUPBank.Domain.Entities;
+using SUPBank.Domain.Results;
 using SUPBank.Domain.Results.Data;
+using System.Collections.Generic;
 
 namespace SUPBank.Application.Features.Menu.Queries
 {
@@ -28,13 +31,13 @@ namespace SUPBank.Application.Features.Menu.Queries
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
-                return new ErrorDataResult<List<EntityMenu>>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
+                return new ErrorDataResult<List<EntityMenu>>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)), new List<EntityMenu>());
             }
 
             var result = await _menuQueryRepository.GetMenuByIdWithSubMenusAsync(request.Id, cancellationToken);
-            if (result == null)
+            if (result.IsNullOrEmpty())
             {
-                return new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoData);
+                return new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoData, new List<EntityMenu>());
             }
             return new SuccessDataResult<List<EntityMenu>>(result.ToList());
         }
