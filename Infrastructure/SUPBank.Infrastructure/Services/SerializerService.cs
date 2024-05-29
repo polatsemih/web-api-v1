@@ -12,6 +12,11 @@ namespace SUPBank.Infrastructure.Services
 
         public T? Deserialize<T>(string serializedObj)
         {
+            if (string.IsNullOrEmpty(serializedObj))
+            {
+                return default;
+            }
+
             return JsonConvert.DeserializeObject<T>(serializedObj);
         }
     }

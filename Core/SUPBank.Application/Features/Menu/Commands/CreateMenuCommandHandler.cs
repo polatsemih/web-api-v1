@@ -4,7 +4,6 @@ using System.ComponentModel.DataAnnotations;
 using SUPBank.Application.Interfaces.Repositories;
 using SUPBank.Application.Validations.Menu;
 using SUPBank.Domain.Contstants;
-using SUPBank.Domain.Results;
 using SUPBank.Domain.Results.Data;
 using SUPBank.Domain.Entities;
 
@@ -74,7 +73,7 @@ namespace SUPBank.Application.Features.Menu.Commands
                 return new ErrorDataResult<long>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
-            if (request.ParentId != 0 && await _menuQueryRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken) == false)
+            if (request.ParentId != 0 && !await _menuQueryRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken))
             {
                 return new ErrorDataResult<long>(ResultMessages.MenuParentIdNotExist);
             }

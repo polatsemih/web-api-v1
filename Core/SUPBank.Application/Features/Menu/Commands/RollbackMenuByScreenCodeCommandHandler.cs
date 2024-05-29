@@ -34,7 +34,7 @@ namespace SUPBank.Application.Features.Menu.Commands
                 return new ErrorResult(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
-            if (await _menuQueryRepository.IsScreenCodeExistsInMenuHAsync(request.ScreenCode, cancellationToken) == false)
+            if (!await _menuQueryRepository.IsScreenCodeExistsInMenuHAsync(request.ScreenCode, cancellationToken))
             {
                 return new ErrorResult(ResultMessages.MenuScreenCodeNotExistInHistory);
             }

@@ -4,7 +4,6 @@ using SUPBank.Application.Interfaces.Repositories;
 using SUPBank.Application.Validations.Menu;
 using SUPBank.Domain.Contstants;
 using SUPBank.Domain.Entities;
-using SUPBank.Domain.Results;
 using SUPBank.Domain.Results.Data;
 using Microsoft.IdentityModel.Tokens;
 
@@ -33,13 +32,13 @@ namespace SUPBank.Application.Features.Menu.Queries
             var validationResult = _validator.Validate(request);
             if (!validationResult.IsValid)
             {
-                return new ErrorDataResult<List<EntityMenu>>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)), new List<EntityMenu>());
+                return new ErrorDataResult<List<EntityMenu>>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
             var result = await _menuQueryRepository.SearchMenusAsync(request.Keyword, cancellationToken);
             if (result.IsNullOrEmpty())
             {
-                return new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoDatas, new List<EntityMenu>());
+                return new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoDatas);
             }
             return new SuccessDataResult<List<EntityMenu>>(result.ToList());
         }

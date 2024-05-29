@@ -76,12 +76,12 @@ namespace SUPBank.Application.Features.Menu.Commands
                 return new ErrorResult(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));
             }
 
-            if (await _menuQueryRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken) == false)
+            if (!await _menuQueryRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken))
             {
                 return new ErrorResult(ResultMessages.MenuIdNotExist);
             }
 
-            if (request.ParentId != 0 && await _menuQueryRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken) == false)
+            if (request.ParentId != 0 && !await _menuQueryRepository.IsParentIdExistsInMenuAsync(request.ParentId, cancellationToken))
             {
                 return new ErrorResult(ResultMessages.MenuParentIdNotExist);
             }
