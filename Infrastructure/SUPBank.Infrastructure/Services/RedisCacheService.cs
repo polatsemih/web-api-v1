@@ -16,92 +16,88 @@ namespace SUPBank.Infrastructure.Services
             _serializer = serializer;
         }
 
-        public T? GetCache<T>(string key, string source)
+        public T? GetCache<T>(string key)
         {
             var cachedData = _database.StringGet(key);
             if (cachedData.IsNullOrEmpty)
             {
-                _logger.LogInformation($"Redis Cache miss for key: {key} from source: {source}");
+                _logger.LogInformation($"Redis Cache miss for key: {key}");
                 return default;
             }
 
-            _logger.LogInformation($"Redis Cache hit for key: {key} from source: {source}");
+            _logger.LogInformation($"Redis Cache hit for key: {key}");
 
             var cachedDataString = cachedData.ToString();
             if (string.IsNullOrEmpty(cachedDataString))
             {
-                _logger.LogInformation($"Redis Cache data string null or empty for key: {key} from source: {source}");
+                _logger.LogInformation($"Redis Cache data string null or empty for key: {key}");
                 return default;
             }
 
             return _serializer.Deserialize<T>(cachedDataString);
         }
 
-        public async Task<T?> GetCacheAsync<T>(string key, string source)
+        public async Task<T?> GetCacheAsync<T>(string key)
         {
             var cachedData = await _database.StringGetAsync(key);
             if (cachedData.IsNullOrEmpty)
             {
-                _logger.LogInformation($"Redis Cache miss for key: {key} from source: {source}");
+                _logger.LogInformation($"Redis Cache miss for key: {key}");
                 return default;
             }
 
-            _logger.LogInformation($"Redis Cache hit for key: {key} from source: {source}");
+            _logger.LogInformation($"Redis Cache hit for key: {key}");
 
             var cachedDataString = cachedData.ToString();
             if (string.IsNullOrEmpty(cachedDataString))
             {
-                _logger.LogInformation($"Redis Cache data string null or empty for key: {key} from source: {source}");
+                _logger.LogInformation($"Redis Cache data string null or empty for key: {key}");
                 return default;
             }
-           
+
             return _serializer.Deserialize<T>(cachedDataString);
         }
 
 
-        public void AddCache(string key, object value, TimeSpan duration, string source)
+        public bool AddCache(string key, object value, TimeSpan duration)
         {
             var serializedValue = _serializer.Serialize(value);
 
             if (duration == TimeSpan.Zero)
             {
-                _database.StringSet(key, serializedValue);
-                _logger.LogInformation($"Redis Cache set for key: {key} with infinite duration from source: {source}");
+                _logger.LogInformation($"Redis Cache set for key: {key} with infinite duration");
+                return _database.StringSet(key, serializedValue);
             }
-            else
-            {
-                _database.StringSet(key, serializedValue, duration);
-                _logger.LogInformation($"Redis Cache set for key: {key} with duration: {duration} from source: {source}");
-            }
+
+            _logger.LogInformation($"Redis Cache set for key: {key} with duration: {duration}");
+            return _database.StringSet(key, serializedValue, duration);
         }
 
-        public async Task AddCacheAsync(string key, object value, TimeSpan duration, string source)
+        public async Task<bool> AddCacheAsync(string key, object value, TimeSpan duration)
         {
             var serializedValue = _serializer.Serialize(value);
 
             if (duration == TimeSpan.Zero)
             {
-                await _database.StringSetAsync(key, serializedValue);
-                _logger.LogInformation($"Redis Cache set for key: {key} with infinite duration from source: {source}");
+                _logger.LogInformation($"Redis Cache set for key: {key} with infinite duration");
+                return await _database.StringSetAsync(key, serializedValue);
             }
-            else
-            {
-                await _database.StringSetAsync(key, serializedValue, duration);
-                _logger.LogInformation($"Redis Cache set for key: {key} with duration: {duration} from source: {source}");
-            }
+
+            _logger.LogInformation($"Redis Cache set for key: {key} with duration: {duration}");
+            return await _database.StringSetAsync(key, serializedValue, duration);
         }
 
 
-        public void RemoveCache(string key, string source)
+        public bool RemoveCache(string key)
         {
-            _database.KeyDelete(key);
-            _logger.LogInformation($"Redis Cache removed for key: {key} from source: {source}");
+            _logger.LogInformation($"Redis Cache removed for key: {key}");
+            return _database.KeyDelete(key);
         }
 
-        public async Task RemoveCacheAsync(string key, string source)
+        public async Task<bool> RemoveCacheAsync(string key)
         {
-            await _database.KeyDeleteAsync(key);
-            _logger.LogInformation($"Redis Cache removed for key: {key} from source: {source}");
+            _logger.LogInformation($"Redis Cache removed for key: {key}");
+            return await _database.KeyDeleteAsync(key);
         }
     }
 }
