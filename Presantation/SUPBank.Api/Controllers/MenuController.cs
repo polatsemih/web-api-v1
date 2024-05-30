@@ -8,7 +8,6 @@ using SUPBank.Domain.Results;
 using SUPBank.Domain.Contstants;
 using StackExchange.Redis;
 using SUPBank.Application.Interfaces.Services;
-using System.Reflection;
 
 namespace SUPBank.Api.Controllers
 {
@@ -31,6 +30,8 @@ namespace SUPBank.Api.Controllers
         /// <param name="request">Empty request body</param>
         /// <returns>List of menus</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("all")]
         public async Task<IActionResult> GetAll([FromQuery] GetAllMenuQueryRequest request)
         {
@@ -41,9 +42,13 @@ namespace SUPBank.Api.Controllers
             }
 
             var result = await _mediator.Send(request, HttpContext.RequestAborted);
-            if (result == null || !result.IsSuccess)
+            if (result == null)
             {
                 return BadRequest(result);
+            }
+            if (!result.IsSuccess)
+            {
+                return NotFound(result);
             }
 
             if (result.Data != null && result.Data.Count != 0)
@@ -71,6 +76,7 @@ namespace SUPBank.Api.Controllers
         /// <returns>A menu</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("get-by-id")]
         public async Task<IActionResult> GetById([FromQuery] GetMenuByIdQueryRequest request)
         {
@@ -78,37 +84,42 @@ namespace SUPBank.Api.Controllers
             if (cachedMenus != null)
             {
                 var filteredMenu = cachedMenus.FirstOrDefault(menu => menu.Id == request.Id);
-                if (filteredMenu != null)
+                if (filteredMenu == null)
                 {
-                    var filteredMenuWithoutSubMenus = new EntityMenu
-                    {
-                        Id = filteredMenu.Id,
-                        ParentId = filteredMenu.ParentId,
-                        Name_TR = filteredMenu.Name_TR,
-                        Name_EN = filteredMenu.Name_EN,
-                        ScreenCode = filteredMenu.ScreenCode,
-                        Type = filteredMenu.Type,
-                        Priority = filteredMenu.Priority,
-                        Keyword = filteredMenu.Keyword,
-                        Icon = filteredMenu.Icon,
-                        IsGroup = filteredMenu.IsGroup,
-                        IsNew = filteredMenu.IsNew,
-                        NewStartDate = filteredMenu.NewStartDate,
-                        NewEndDate = filteredMenu.NewEndDate,
-                        IsActive = filteredMenu.IsActive,
-                        CreatedDate = filteredMenu.CreatedDate,
-                        LastModifiedDate = filteredMenu.LastModifiedDate
-                    };
-                    return Ok(new SuccessDataResult<EntityMenu>(filteredMenuWithoutSubMenus));
+                    return NotFound(new ErrorDataResult<EntityMenu>(ResultMessages.MenuNoData));
                 }
+
+                var filteredMenuWithoutSubMenus = new EntityMenu
+                {
+                    Id = filteredMenu.Id,
+                    ParentId = filteredMenu.ParentId,
+                    Name_TR = filteredMenu.Name_TR,
+                    Name_EN = filteredMenu.Name_EN,
+                    ScreenCode = filteredMenu.ScreenCode,
+                    Type = filteredMenu.Type,
+                    Priority = filteredMenu.Priority,
+                    Keyword = filteredMenu.Keyword,
+                    Icon = filteredMenu.Icon,
+                    IsGroup = filteredMenu.IsGroup,
+                    IsNew = filteredMenu.IsNew,
+                    NewStartDate = filteredMenu.NewStartDate,
+                    NewEndDate = filteredMenu.NewEndDate,
+                    IsActive = filteredMenu.IsActive,
+                    CreatedDate = filteredMenu.CreatedDate,
+                    LastModifiedDate = filteredMenu.LastModifiedDate
+                };
+                return Ok(new SuccessDataResult<EntityMenu>(filteredMenuWithoutSubMenus));
             }
 
             var result = await _mediator.Send(request: request, cancellationToken: HttpContext.RequestAborted);
-            if (result == null || !result.IsSuccess)
+            if (result == null)
             {
                 return BadRequest(result);
             }
-
+            if (!result.IsSuccess)
+            {
+                return NotFound(result);
+            }
             return Ok(result);
         }
 
@@ -119,23 +130,29 @@ namespace SUPBank.Api.Controllers
         /// <returns>A menu with sub menus</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("get-by-id-with-submenus")]
-        public async Task<IActionResult> GetByIdWitSubMenus([FromQuery] GetMenuByIdWithSubMenusQueryRequest request)
+        public async Task<IActionResult> GetByIdWithSubMenus([FromQuery] GetMenuByIdWithSubMenusQueryRequest request)
         {
             var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
             if (cachedMenus != null)
             {
                 var filteredMenu = cachedMenus.FirstOrDefault(menu => menu.Id == request.Id);
-                if (filteredMenu != null)
+                if (filteredMenu == null)
                 {
-                    return Ok(new SuccessDataResult<EntityMenu>(filteredMenu));
+                    return NotFound(new ErrorDataResult<EntityMenu>(ResultMessages.MenuNoData));
                 }
+                return Ok(new SuccessDataResult<EntityMenu>(filteredMenu));
             }
 
             var result = await _mediator.Send(request: request, cancellationToken: HttpContext.RequestAborted);
-            if (result == null || !result.IsSuccess)
+            if (result == null)
             {
                 return BadRequest(result);
+            }
+            if (!result.IsSuccess)
+            {
+                return NotFound(result);
             }
 
             if (result.Data != null && result.Data.Count != 0)
@@ -163,6 +180,7 @@ namespace SUPBank.Api.Controllers
         /// <returns>List of menus</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] SearchMenuQueryRequest request)
         {
@@ -173,36 +191,42 @@ namespace SUPBank.Api.Controllers
                     .Where(menu => menu.Keyword.Contains(request.Keyword, StringComparison.OrdinalIgnoreCase))
                     .ToList();
 
-                if (filteredMenus.Count != 0)
+                if (filteredMenus.Count == 0)
                 {
-                    var filteredMenusWithoutSubMenus = filteredMenus.Select(filteredMenu => new EntityMenu
-                    {
-                        Id = filteredMenu.Id,
-                        ParentId = filteredMenu.ParentId,
-                        Name_TR = filteredMenu.Name_TR,
-                        Name_EN = filteredMenu.Name_EN,
-                        ScreenCode = filteredMenu.ScreenCode,
-                        Type = filteredMenu.Type,
-                        Priority = filteredMenu.Priority,
-                        Keyword = filteredMenu.Keyword,
-                        Icon = filteredMenu.Icon,
-                        IsGroup = filteredMenu.IsGroup,
-                        IsNew = filteredMenu.IsNew,
-                        NewStartDate = filteredMenu.NewStartDate,
-                        NewEndDate = filteredMenu.NewEndDate,
-                        IsActive = filteredMenu.IsActive,
-                        CreatedDate = filteredMenu.CreatedDate,
-                        LastModifiedDate = filteredMenu.LastModifiedDate
-                    }).ToList();
-
-                    return Ok(new SuccessDataResult<List<EntityMenu>>(filteredMenusWithoutSubMenus));
+                    return NotFound(new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoDatas));
                 }
+
+                var filteredMenusWithoutSubMenus = filteredMenus.Select(filteredMenu => new EntityMenu
+                {
+                    Id = filteredMenu.Id,
+                    ParentId = filteredMenu.ParentId,
+                    Name_TR = filteredMenu.Name_TR,
+                    Name_EN = filteredMenu.Name_EN,
+                    ScreenCode = filteredMenu.ScreenCode,
+                    Type = filteredMenu.Type,
+                    Priority = filteredMenu.Priority,
+                    Keyword = filteredMenu.Keyword,
+                    Icon = filteredMenu.Icon,
+                    IsGroup = filteredMenu.IsGroup,
+                    IsNew = filteredMenu.IsNew,
+                    NewStartDate = filteredMenu.NewStartDate,
+                    NewEndDate = filteredMenu.NewEndDate,
+                    IsActive = filteredMenu.IsActive,
+                    CreatedDate = filteredMenu.CreatedDate,
+                    LastModifiedDate = filteredMenu.LastModifiedDate
+                }).ToList();
+
+                return Ok(new SuccessDataResult<List<EntityMenu>>(filteredMenusWithoutSubMenus));
             }
 
             var result = await _mediator.Send(request: request, cancellationToken: HttpContext.RequestAborted);
-            if (result == null || !result.IsSuccess)
+            if (result == null)
             {
                 return BadRequest(result);
+            }
+            if (!result.IsSuccess)
+            {
+                return NotFound(new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoDatas));
             }
             return Ok(result);
         }
@@ -256,8 +280,6 @@ namespace SUPBank.Api.Controllers
         [HttpPut("update")]
         public async Task<IActionResult> Update([FromBody] UpdateMenuCommandRequest request)
         {
-            string source = MethodBase.GetCurrentMethod().DeclaringType.FullName + MethodBase.GetCurrentMethod().Name;
-
             var result = await _mediator.Send(request: request, cancellationToken: HttpContext.RequestAborted);
             if (result == null || !result.IsSuccess)
             {

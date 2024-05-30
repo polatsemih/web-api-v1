@@ -18,7 +18,7 @@ namespace SUPBank.Infrastructure.Services
 
         public T? GetCache<T>(string key)
         {
-            if (_memoryCache.TryGetValue(key, out string cachedObject) && cachedObject != null)
+            if (_memoryCache.TryGetValue(key, out string? cachedObject) && cachedObject != null)
             {
                 _logger.LogInformation($"Cache hit for key: {key}");
                 return _serializer.Deserialize<T>(cachedObject);
