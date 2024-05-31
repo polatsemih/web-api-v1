@@ -26,7 +26,7 @@ namespace SUPBank.Application.Features.Menu.Commands
 
         public async Task<IDataResult<int>> Handle(RollbackMenusByTokenCommandRequest request, CancellationToken cancellationToken)
         {
-            var validationResult = _validator.Validate(request);
+            var validationResult = await _validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
             {
                 return new ErrorDataResult<int>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));

@@ -29,5 +29,6 @@
 
         public const string MenuCacheNotExist = "Menu cache already not exist";
         public const string MenuCacheRemoved = "Menu cache removed";
+        public const string MenuCacheCouldNotRemoved = "An error occurred while removing the cache";
     }
 }

@@ -29,7 +29,7 @@ namespace SUPBank.Application.Features.Menu.Queries
 
         public async Task<IDataResult<List<EntityMenu>>> Handle(SearchMenuQueryRequest request, CancellationToken cancellationToken)
         {
-            var validationResult = _validator.Validate(request);
+            var validationResult = await _validator.ValidateAsync(request, cancellationToken);
             if (!validationResult.IsValid)
             {
                 return new ErrorDataResult<List<EntityMenu>>(string.Join(", ", validationResult.Errors.Select(error => error.ErrorMessage)));

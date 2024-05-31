@@ -24,28 +24,39 @@ namespace SUPBank.Api.Controllers
             _cacheService = cacheService;
         }
 
+        private List<EntityMenu> RecursiveMenu(List<EntityMenu> menuData)
+        {
+            var menuDictionary = menuData.ToDictionary(menu => menu.Id);
+
+            foreach (var menu in menuData)
+            {
+                if (menu.ParentId != 0 && menuDictionary.TryGetValue(menu.ParentId, out var parentMenu))
+                {
+                    parentMenu.SubMenus.Add(menu);
+                }
+            }
+
+            return menuData.Where(menu => menu.ParentId == 0).ToList();
+        }
+
+
         /// <summary>
         /// Get all menus
         /// </summary>
         /// <param name="request">Empty request body</param>
         /// <returns>List of menus</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("all")]
         public async Task<IActionResult> GetAll([FromQuery] GetAllMenuQueryRequest request)
         {
-            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
+            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
             if (cachedMenus != null)
             {
                 return Ok(new SuccessDataResult<List<EntityMenu>>(cachedMenus));
             }
 
             var result = await _mediator.Send(request, HttpContext.RequestAborted);
-            if (result == null)
-            {
-                return BadRequest(result);
-            }
             if (!result.IsSuccess)
             {
                 return NotFound(result);
@@ -53,17 +64,8 @@ namespace SUPBank.Api.Controllers
 
             if (result.Data != null && result.Data.Count != 0)
             {
-                Dictionary<long, EntityMenu> menuDictionary = result.Data.ToDictionary(menu => menu.Id);
-                foreach (var menu in result.Data)
-                {
-                    if (menu.ParentId != 0 && menuDictionary.TryGetValue(menu.ParentId, out var parentMenu))
-                    {
-                        parentMenu.SubMenus.Add(menu);
-                    }
-                }
-
-                result.Data = result.Data.Where(menu => menu.ParentId == 0).ToList();
-                await _cacheService.AddCacheAsync(CacheKeys.CacheKeyMenu, result.Data, TimeSpan.Zero); // TimeSpan.FromMinutes(10) for 10 minutes caching
+                result.Data = RecursiveMenu(result.Data);
+                await _cacheService.AddCacheAsync(Cache.CacheKeyMenu, result.Data);
             }
 
             return Ok(result);
@@ -75,47 +77,40 @@ namespace SUPBank.Api.Controllers
         /// <param name="request">Menu Id</param>
         /// <returns>A menu</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
-        [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("get-by-id")]
         public async Task<IActionResult> GetById([FromQuery] GetMenuByIdQueryRequest request)
         {
-            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
+            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
             if (cachedMenus != null)
             {
                 var filteredMenu = cachedMenus.FirstOrDefault(menu => menu.Id == request.Id);
-                if (filteredMenu == null)
+                if (filteredMenu != null)
                 {
-                    return NotFound(new ErrorDataResult<EntityMenu>(ResultMessages.MenuNoData));
+                    var filteredMenuWithoutSubMenus = new EntityMenu
+                    {
+                        Id = filteredMenu.Id,
+                        ParentId = filteredMenu.ParentId,
+                        Name_TR = filteredMenu.Name_TR,
+                        Name_EN = filteredMenu.Name_EN,
+                        ScreenCode = filteredMenu.ScreenCode,
+                        Type = filteredMenu.Type,
+                        Priority = filteredMenu.Priority,
+                        Keyword = filteredMenu.Keyword,
+                        Icon = filteredMenu.Icon,
+                        IsGroup = filteredMenu.IsGroup,
+                        IsNew = filteredMenu.IsNew,
+                        NewStartDate = filteredMenu.NewStartDate,
+                        NewEndDate = filteredMenu.NewEndDate,
+                        IsActive = filteredMenu.IsActive,
+                        CreatedDate = filteredMenu.CreatedDate,
+                        LastModifiedDate = filteredMenu.LastModifiedDate
+                    };
+                    return Ok(new SuccessDataResult<EntityMenu>(filteredMenuWithoutSubMenus));
                 }
-
-                var filteredMenuWithoutSubMenus = new EntityMenu
-                {
-                    Id = filteredMenu.Id,
-                    ParentId = filteredMenu.ParentId,
-                    Name_TR = filteredMenu.Name_TR,
-                    Name_EN = filteredMenu.Name_EN,
-                    ScreenCode = filteredMenu.ScreenCode,
-                    Type = filteredMenu.Type,
-                    Priority = filteredMenu.Priority,
-                    Keyword = filteredMenu.Keyword,
-                    Icon = filteredMenu.Icon,
-                    IsGroup = filteredMenu.IsGroup,
-                    IsNew = filteredMenu.IsNew,
-                    NewStartDate = filteredMenu.NewStartDate,
-                    NewEndDate = filteredMenu.NewEndDate,
-                    IsActive = filteredMenu.IsActive,
-                    CreatedDate = filteredMenu.CreatedDate,
-                    LastModifiedDate = filteredMenu.LastModifiedDate
-                };
-                return Ok(new SuccessDataResult<EntityMenu>(filteredMenuWithoutSubMenus));
             }
 
             var result = await _mediator.Send(request: request, cancellationToken: HttpContext.RequestAborted);
-            if (result == null)
-            {
-                return BadRequest(result);
-            }
             if (!result.IsSuccess)
             {
                 return NotFound(result);
@@ -134,7 +129,7 @@ namespace SUPBank.Api.Controllers
         [HttpGet("get-by-id-with-submenus")]
         public async Task<IActionResult> GetByIdWithSubMenus([FromQuery] GetMenuByIdWithSubMenusQueryRequest request)
         {
-            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
+            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
             if (cachedMenus != null)
             {
                 var filteredMenu = cachedMenus.FirstOrDefault(menu => menu.Id == request.Id);
@@ -184,7 +179,7 @@ namespace SUPBank.Api.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] SearchMenuQueryRequest request)
         {
-            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
+            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
             if (cachedMenus != null)
             {
                 var filteredMenus = cachedMenus
@@ -237,17 +232,21 @@ namespace SUPBank.Api.Controllers
         /// <param name="request">Empty request body</param>
         /// <returns>True if the menu cache removed successfully, false otherwise</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet("remove-cache")]
         public async Task<IActionResult> RemoveCache()
         {
-            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(CacheKeys.CacheKeyMenu);
+            var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
             if (cachedMenus == null)
             {
                 return Ok(new ErrorResult(ResultMessages.MenuCacheNotExist));
             }
 
-            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu);
-            return Ok(new SuccessResult(ResultMessages.MenuCacheRemoved));
+            if (await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu))
+            {
+                return Ok(new SuccessResult(ResultMessages.MenuCacheRemoved));
+            }
+            return StatusCode(StatusCodes.Status500InternalServerError, new ErrorResult(ResultMessages.MenuCacheCouldNotRemoved));
         }
 
         /// <summary>
@@ -266,7 +265,7 @@ namespace SUPBank.Api.Controllers
                 return BadRequest(result);
             }
 
-            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu);
+            await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu);
             return Ok(result);
         }
 
@@ -286,7 +285,7 @@ namespace SUPBank.Api.Controllers
                 return BadRequest(result);
             }
 
-            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu);
+            await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu);
             return Ok(result);
         }
 
@@ -306,7 +305,7 @@ namespace SUPBank.Api.Controllers
                 return BadRequest(result);
             }
 
-            await _cacheService.RemoveCacheAsync(CacheKeys.CacheKeyMenu);
+            await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu);
             return Ok(result);
         }
 
