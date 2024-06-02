@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using SUPBank.Application.Features.Menu.Commands;
+using SUPBank.Application.Features.Menu.Commands.Requests;
 using SUPBank.Domain.Entities;
 
 namespace SUPBank.Application.MappingConfiguration

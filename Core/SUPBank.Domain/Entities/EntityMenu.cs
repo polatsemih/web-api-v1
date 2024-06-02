@@ -10,12 +10,12 @@
         /// <summary>
         /// Turkish name of the menu item
         /// </summary>
-        public string Name_TR { get; set; }
+        public string Name_TR { get; set; } = string.Empty;
 
         /// <summary>
         /// English name of the menu item
         /// </summary>
-        public string Name_EN { get; set; }
+        public string Name_EN { get; set; } = string.Empty;
 
         /// <summary>
         /// Screen code associated with the menu item. The code must be within the range starting from 10000.
@@ -35,7 +35,7 @@
         /// <summary>
         /// Keyword associated with the menu item for searching
         /// </summary>
-        public string Keyword { get; set; }
+        public string Keyword { get; set; } = string.Empty;
 
         /// <summary>
         /// Path to the icon associated with the menu item

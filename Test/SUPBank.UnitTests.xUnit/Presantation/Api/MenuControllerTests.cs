@@ -1,16 +1,19 @@
-﻿using MediatR;
+﻿using FluentValidation;
+using FluentValidation.Results;
+using MediatR;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
 using SUPBank.Api.Controllers;
-using SUPBank.Application.Features.Menu.Commands;
-using SUPBank.Application.Features.Menu.Queries;
+using SUPBank.Application.Features.Menu.Queries.Requests;
+using SUPBank.Application.Features.Menu.Commands.Requests;
 using SUPBank.Application.Interfaces.Services;
 using SUPBank.Application.Validations.Menu;
 using SUPBank.Domain.Contstants;
 using SUPBank.Domain.Entities;
-using SUPBank.Domain.Results;
-using SUPBank.Domain.Results.Data;
+using SUPBank.Domain.Responses;
+using SUPBank.Domain.Responses.Data;
+using SUPBank.Infrastructure.Services;
 using SUPBank.UnitTests.xUnit.Utilities.Helpers;
 using Xunit;
 
@@ -20,13 +23,15 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
     {
         private readonly Mock<IMediator> _mediatorMock;
         private readonly Mock<IRedisCacheService> _cacheServiceMock;
+        private readonly Mock<IValidationService> _validationServiceMock;
         private readonly MenuController _controller;
 
         public MenuControllerTests()
         {
             _mediatorMock = new();
             _cacheServiceMock = new();
-            _controller = new(_mediatorMock.Object, _cacheServiceMock.Object);
+            _validationServiceMock = new();
+            _controller = new(_mediatorMock.Object, _cacheServiceMock.Object, _validationServiceMock.Object);
 
             ControllerTestHelper.SetHttpContext(_controller);
         }
@@ -58,19 +63,20 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
             SetupCacheService(cachedMenus);
 
             // Act
-            var result = await _controller.GetAll(request) as ObjectResult;
+            var objectResult = await _controller.GetAll(request) as ObjectResult;
 
             // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(200, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkDataResponse<List<EntityMenu>>;
             Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
 
-            // Assert Data
-            var dataResult = result.Value as SuccessDataResult<List<EntityMenu>>;
-            Assert.NotNull(dataResult);
-            Assert.True(dataResult.IsSuccess);
+            Assert.Empty(result.Message);
 
-            Assert.NotNull(dataResult.Data);
-            Assert.Equal(cachedMenus, dataResult.Data);
+            Assert.NotNull(result.Data);
+            Assert.Equal(cachedMenus, result.Data);
         }
 
         [Fact]
@@ -81,67 +87,72 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
             List<EntityMenu>? cachedMenus = null;
             List<EntityMenu> menusFromMediator =
             [
-                new() { Id = 1, ParentId = 0, Name_EN = "Menu1", SubMenus = [] },
-                new() { Id = 2, ParentId = 0, Name_EN = "Menu2", SubMenus = [] },
-                new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", SubMenus = [] },
-                new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", SubMenus = [] },
-                new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", SubMenus = [] }
+                new() { Id = 1, ParentId = 0, Name_EN = "Menu1" },
+                new() { Id = 2, ParentId = 0, Name_EN = "Menu2" },
+                new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1" },
+                new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2" },
+                new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1" }
             ];
 
             // Arrange Service
             SetupCacheService(cachedMenus);
             _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
-                         .ReturnsAsync(new SuccessDataResult<List<EntityMenu>>(menusFromMediator));
+                         .ReturnsAsync(new OkDataResponse<List<EntityMenu>>(menusFromMediator));
 
             // Act
-            var result = await _controller.GetAll(request) as OkObjectResult;
+            var objectResult = await _controller.GetAll(request) as ObjectResult;
 
             // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(200, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkDataResponse<List<EntityMenu>>;
             Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
 
-            // Assert Data
-            var dataResult = result.Value as SuccessDataResult<List<EntityMenu>>;
-            Assert.NotNull(dataResult);
-            Assert.True(dataResult.IsSuccess);
+            Assert.Empty(result.Message);
 
-            Assert.NotNull(dataResult.Data);
-            Assert.Equal(menusFromMediator.Where(menu => menu.ParentId == 0), dataResult.Data);
+            Assert.NotNull(result.Data);
+            Assert.Equal(menusFromMediator.Where(menu => menu.ParentId == 0), result.Data);
         }
 
         [Fact]
         public async Task GetAll_ShouldReturnNotFound_WhenCacheIsEmpty_AndReturnNoMenu()
         {
-            // Arrange
+            // Arrange Data
             GetAllMenuQueryRequest request = new();
             List<EntityMenu>? cachedMenus = null;
 
+            // Arrange Service
             SetupCacheService(cachedMenus);
             _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
-                         .ReturnsAsync(new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoDatas));
+                         .ReturnsAsync(new NotFoundResponse(ResultMessages.MenuNoDatas));
 
             // Act
-            var result = await _controller.GetAll(request) as NotFoundObjectResult;
+            var objectResult = await _controller.GetAll(request) as ObjectResult;
 
             // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(404, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as NotFoundResponse;
             Assert.NotNull(result);
-            Assert.Equal(404, result.StatusCode);
 
-            // Assert Data
-            var dataResult = result.Value as ErrorDataResult<List<EntityMenu>>;
-            Assert.NotNull(dataResult);
-            Assert.False(dataResult.IsSuccess);
-
-            Assert.Equal(ResultMessages.MenuNoDatas, dataResult.Message);
-            Assert.Null(dataResult.Data);
+            Assert.Equal(ResultMessages.MenuNoDatas, result.Message);
         }
 
 
-        [Fact]
-        public async Task GetById_ShouldReturnOk_WhenCacheIsNotEmpty_AndReturnMenu()
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(3)]
+        [InlineData(4)]
+        [InlineData(5)]
+        public async Task GetById_ShouldReturnOk_WhenCacheIsNotEmpty_AndReturnMenu(long id)
         {
-            // Arrange
-            GetMenuByIdQueryRequest request = new() { Id = 1 };
+            // Arrange Data
+            GetMenuByIdQueryRequest request = new() { Id = id };
             List<EntityMenu> cachedMenus =
             [
                 new() { Id = 1, ParentId = 0, Name_EN = "Menu1", SubMenus = [
@@ -153,100 +164,93 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
                 new() { Id = 2, ParentId = 0, Name_EN = "Menu2", SubMenus = [] }
             ];
 
+            // Arrange Service
             SetupCacheService(cachedMenus);
 
             // Act
-            var result = await _controller.GetById(request) as OkObjectResult;
+            var objectResult = await _controller.GetById(request) as ObjectResult;
 
             // Assert Result
-            Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
+            Assert.NotNull(objectResult);
+            Assert.Equal(200, objectResult.StatusCode);
 
-            // Assert Data
-            var dataResult = result.Value as SuccessDataResult<EntityMenu>;
-            Assert.NotNull(dataResult);
-            Assert.True(dataResult.IsSuccess);
-            Assert.NotNull(dataResult.Data);
-            Assert.Equal(1, dataResult.Data.Id);
+            // Assert Data Result
+            var result = objectResult.Value as OkDataResponse<EntityMenu>;
+            Assert.NotNull(result);
+
+            Assert.Empty(result.Message);
+
+            Assert.NotNull(result.Data);
+            Assert.Equal(id, result.Data.Id);
         }
 
         [Fact]
         public async Task GetById_ShouldReturnOk_WhenCacheIsEmpty_AndReturnMenu()
         {
-            // Arrange
+            // Arrange Data
             GetMenuByIdQueryRequest request = new() { Id = 1 };
             List<EntityMenu>? cachedMenus = null;
             EntityMenu menuFromMediator = new() { Id = 1, ParentId = 0, Name_EN = "Menu1" };
 
+            // Arrange Service
             SetupCacheService(cachedMenus);
             _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
-                         .ReturnsAsync(new SuccessDataResult<EntityMenu>(menuFromMediator));
+                         .ReturnsAsync(new OkDataResponse<EntityMenu>(menuFromMediator));
 
             // Act
-            var result = await _controller.GetById(request) as OkObjectResult;
+            var objectResult = await _controller.GetById(request) as ObjectResult;
 
             // Assert Result
-            Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
+            Assert.NotNull(objectResult);
+            Assert.Equal(200, objectResult.StatusCode);
 
-            // Assert Data
-            var dataResult = result.Value as SuccessDataResult<EntityMenu>;
-            Assert.NotNull(dataResult);
-            Assert.True(dataResult.IsSuccess);
-            Assert.NotNull(dataResult.Data);
-            Assert.Equal(menuFromMediator, dataResult.Data);
+            // Assert Data Result
+            var result = objectResult.Value as OkDataResponse<EntityMenu>;
+            Assert.NotNull(result);
+
+            Assert.Empty(result.Message);
+
+            Assert.NotNull(result.Data);
+            Assert.Equal(menuFromMediator, result.Data);
         }
 
         [Fact]
         public async Task GetById_ShouldReturnNotFound_WhenCacheIsEmpty_AndReturnNoMenu()
         {
-            // Arrange
+            // Arrange Data
             GetMenuByIdQueryRequest request = new() { Id = 1234 };
             List<EntityMenu>? cachedMenus = null;
 
+            // Arrange Service
             SetupCacheService(cachedMenus);
             _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
-                         .ReturnsAsync(new ErrorDataResult<EntityMenu>(ResultMessages.MenuNoData));
+                         .ReturnsAsync(new NotFoundResponse(ResultMessages.MenuNoData));
 
             // Act
-            var result = await _controller.GetById(request) as NotFoundObjectResult;
+            var objectResult = await _controller.GetById(request) as ObjectResult;
 
             // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(404, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as NotFoundResponse;
             Assert.NotNull(result);
-            Assert.Equal(404, result.StatusCode);
 
-            // Assert Data
-            var dataResult = result.Value as ErrorDataResult<EntityMenu>;
-            Assert.NotNull(dataResult);
-            Assert.False(dataResult.IsSuccess);
-
-            Assert.Equal(ResultMessages.MenuNoData, dataResult.Message);
-            Assert.Null(dataResult.Data);
+            Assert.Equal(ResultMessages.MenuNoData, result.Message);
         }
 
-        //[Fact]
-        //public async Task GetById_ShouldReturnBadRequest_WhenInvalidIdProvided()
-        //{
-        //    // Arrange
-        //    var request = new GetMenuByIdQueryRequest { Id = 0 };
-        //    _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
-        //                 .ReturnsAsync(new ErrorDataResult<EntityMenu>("Id must be greater than 0"));
 
-        //    // Act
-        //    var result = await _controller.GetById(request) as BadRequestObjectResult;
-
-        //    // Assert
-        //    Assert.NotNull(result);
-        //    Assert.Equal(400, result.StatusCode);
-        //    Assert.Equal("Id must be greater than 0", (result.Value as ErrorDataResult<EntityMenu>).Message);
-        //}
-
-
-
-        [Fact]
-        public async Task GetByIdWithSubMenus_ShouldReturnOk_WhenCacheIsNotEmpty_AndReturnMenu()
+        [Theory]
+        [InlineData(1)]
+        [InlineData(2)]
+        [InlineData(3)]
+        [InlineData(4)]
+        [InlineData(5)]
+        public async Task GetByIdWithSubMenus_ShouldReturnOk_WhenCacheIsNotEmpty_AndReturnMenu(long id)
         {
-            // Arrange
+            // Arrange Data
+            GetMenuByIdWithSubMenusQueryRequest request = new() { Id = id };
             List<EntityMenu> cachedMenus =
             [
                 new() { Id = 1, ParentId = 0, Name_EN = "Menu1", SubMenus = [
@@ -258,447 +262,453 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
                 new() { Id = 2, ParentId = 0, Name_EN = "Menu2", SubMenus = [] }
             ];
 
+            // Arrange Service
             SetupCacheService(cachedMenus);
 
-            GetMenuByIdWithSubMenusQueryRequest request = new() { Id = 1 };
-
             // Act
-            var result = await _controller.GetByIdWithSubMenus(request) as OkObjectResult;
+            var objectResult = await _controller.GetByIdWithSubMenus(request) as ObjectResult;
 
-            // Assert
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(200, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkDataResponse<EntityMenu>;
             Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
 
-            var dataResult = result.Value as SuccessDataResult<EntityMenu>;
-            Assert.NotNull(dataResult);
-            Assert.True(dataResult.IsSuccess);
-            Assert.NotNull(dataResult.Data);
-            Assert.Equal(1, dataResult.Data.Id);
-            Assert.NotEmpty(dataResult.Data.SubMenus);
+            Assert.Empty(result.Message);
+
+            Assert.NotNull(result.Data);
+            Assert.Equal(id, result.Data.Id);
+            if (id == 1 || id == 4)
+            {
+                Assert.NotEmpty(result.Data.SubMenus);
+            }
+            else
+            {
+                Assert.Empty(result.Data.SubMenus);
+            }
         }
 
-        [Fact]
-        public async Task GetByIdWithSubMenus_ShouldReturnNotFound_WhenCacheIsNotEmpty_AndReturnNoMenu()
+        [Theory]
+        [InlineData(1)]
+        [InlineData(3)]
+        public async Task GetByIdWithSubMenus_ShouldReturnOk_WhenCacheIsEmpty_AndReturnMenu(long id)
         {
-            // Arrange
-            List<EntityMenu> cachedMenus =
-            [
-                new() { Id = 1, ParentId = 0, Name_EN = "Menu1", SubMenus = [
-                    new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", SubMenus = [] },
-                    new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", SubMenus = [
-                        new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", SubMenus = [] }
-                    ] }
-                ] },
-                new() { Id = 2, ParentId = 0, Name_EN = "Menu2", SubMenus = [] }
-            ];
-
-            SetupCacheService(cachedMenus);
-
-            GetMenuByIdWithSubMenusQueryRequest request = new() { Id = 1234 };
-
-            // Act
-            var result = await _controller.GetByIdWithSubMenus(request) as NotFoundObjectResult;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(404, result.StatusCode);
-
-            var dataResult = result.Value as ErrorDataResult<EntityMenu>;
-            Assert.NotNull(dataResult);
-            Assert.False(dataResult.IsSuccess);
-            Assert.Null(dataResult.Data);
-        }
-
-        [Fact]
-        public async Task GetByIdWithSubMenus_ShouldReturnOk_WhenCacheIsEmpty_AndReturnMenu()
-        {
-            // Arrange
+            // Arrange Data
+            GetMenuByIdWithSubMenusQueryRequest request = new() { Id = id };
             List<EntityMenu>? cachedMenus = null;
             List<EntityMenu> menusFromMediator =
             [
-                new() { Id = 1, ParentId = 0, Name_EN = "Menu1", SubMenus = [] },
-                new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", SubMenus = [] },
-                new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", SubMenus = [] },
-                new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", SubMenus = [] }
+                new() { Id = 1, ParentId = 0, Name_EN = "Menu1" },
+                new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1" },
+                new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2" }
             ];
 
+            // Arrange Service
             SetupCacheService(cachedMenus);
-
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetMenuByIdWithSubMenusQueryRequest>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new SuccessDataResult<List<EntityMenu>>(menusFromMediator));
-
-            GetMenuByIdWithSubMenusQueryRequest request = new() { Id = 1 };
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(new OkDataResponse<List<EntityMenu>>(menusFromMediator));
 
             // Act
-            var result = await _controller.GetByIdWithSubMenus(request) as OkObjectResult;
+            var objectResult = await _controller.GetByIdWithSubMenus(request) as ObjectResult;
 
-            // Assert
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(200, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkDataResponse<EntityMenu>;
             Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
 
-            var dataResult = result.Value as SuccessDataResult<EntityMenu>;
-            Assert.NotNull(dataResult);
-            Assert.True(dataResult.IsSuccess);
-            Assert.NotNull(dataResult.Data);
-            Assert.Equal(1, dataResult.Data.Id);
-            Assert.NotEmpty(dataResult.Data.SubMenus);
+            Assert.Empty(result.Message);
+
+            Assert.NotNull(result.Data);
+            Assert.Equal(id, result.Data.Id);
+            if (id == 1)
+            {
+                Assert.NotEmpty(result.Data.SubMenus);
+            }
+            else
+            {
+                Assert.Empty(result.Data.SubMenus);
+            }
         }
 
         [Fact]
         public async Task GetByIdWithSubMenus_ShouldReturnNotFound_WhenCacheIsEmpty_AndReturnNoMenu()
         {
-            // Arrange
-            List<EntityMenu>? cachedMenus = null;
-
-            SetupCacheService(cachedMenus);
-
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetMenuByIdWithSubMenusQueryRequest>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoData));
-
+            // Arrange Data
             GetMenuByIdWithSubMenusQueryRequest request = new() { Id = 1234 };
-
-            // Act
-            var result = await _controller.GetByIdWithSubMenus(request) as NotFoundObjectResult;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(404, result.StatusCode);
-
-            var dataResult = result.Value as ErrorDataResult<List<EntityMenu>>;
-            Assert.NotNull(dataResult);
-            Assert.False(dataResult.IsSuccess);
-            Assert.Null(dataResult.Data);
-        }
-
-        [Fact]
-        public async Task GetByIdWithSubMenus_ShouldReturnBadRequest_WhenCacheIsEmpty_AndReturnNull()
-        {
-            // Arrange
             List<EntityMenu>? cachedMenus = null;
 
+            // Arrange Service
             SetupCacheService(cachedMenus);
-
-            _mediatorMock.Setup(m => m.Send(It.IsAny<GetMenuByIdWithSubMenusQueryRequest>(), It.IsAny<CancellationToken>()))
-                 .ReturnsAsync((IDataResult<List<EntityMenu>>?)null!);
-
-            GetMenuByIdWithSubMenusQueryRequest request = new() { Id = 1 };
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(new NotFoundResponse(ResultMessages.MenuNoData));
 
             // Act
-            var result = await _controller.GetByIdWithSubMenus(request) as BadRequestObjectResult;
+            var objectResult = await _controller.GetByIdWithSubMenus(request) as ObjectResult;
 
-            // Assert
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(404, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as NotFoundResponse;
             Assert.NotNull(result);
-            Assert.Equal(400, result.StatusCode);
+
+            Assert.Equal(ResultMessages.MenuNoData, result.Message);
         }
 
 
-        [Fact]
-        public async Task Search_ShouldReturnOk_WhenCacheIsNotEmpty_AndReturnMenu()
+        [Theory]
+        [InlineData("Keyword", true, 5)]
+        [InlineData("Keyword1", false, 1)]
+        [InlineData("Keyword2", true, 3)]
+        public async Task Search_ShouldReturnOk_WhenCacheIsNotEmpty_AndReturnMenu(string keyword, bool isList, long idOrCount)
         {
-            // Arrange
+            // Arrange Data
+            SearchMenuQueryRequest request = new() { Keyword = keyword };
             List<EntityMenu> cachedMenus =
             [
                 new() { Id = 1, ParentId = 0, Name_EN = "Menu1", Keyword = "Keyword1", SubMenus = [
                     new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", Keyword = "Keyword3", SubMenus = [] },
-                    new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword4", SubMenus = [
-                        new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5", SubMenus = [] }
+                    new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword2", SubMenus = [
+                        new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword2", SubMenus = [] }
                     ] }
                 ] },
                 new() { Id = 2, ParentId = 0, Name_EN = "Menu2", Keyword = "Keyword2", SubMenus = [] }
             ];
 
+            // Arrange Service
             SetupCacheService(cachedMenus);
 
-            SearchMenuQueryRequest request = new() { Keyword = "Keyword1" };
-
             // Act
-            var result = await _controller.Search(request) as OkObjectResult;
+            var objectResult = await _controller.Search(request) as ObjectResult;
 
-            // Assert
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(200, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkDataResponse<List<EntityMenu>>;
             Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
 
-            var dataResult = result.Value as SuccessDataResult<List<EntityMenu>>;
-            Assert.NotNull(dataResult);
-            Assert.True(dataResult.IsSuccess);
-            Assert.NotNull(dataResult.Data);
-            Assert.Single(dataResult.Data);
-            Assert.Equal(1, dataResult.Data.First().Id);
-        }
+            Assert.Empty(result.Message);
 
-        [Fact]
-        public async Task Search_ShouldReturnOk_WhenCacheIsNotEmpty_AndReturnNoMenu()
-        {
-            // Arrange
-            List<EntityMenu> cachedMenus =
-            [
-                new() { Id = 1, ParentId = 0, Name_EN = "Menu1", Keyword = "Keyword1", SubMenus = [
-                    new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", Keyword = "Keyword3", SubMenus = [] },
-                    new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword4", SubMenus = [
-                        new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5", SubMenus = [] }
-                    ] }
-                ] },
-                new() { Id = 2, ParentId = 0, Name_EN = "Menu2", Keyword = "Keyword2", SubMenus = [] }
-            ];
-
-            SetupCacheService(cachedMenus);
-
-            SearchMenuQueryRequest request = new() { Keyword = "Keyword6" };
-
-            // Act
-            var result = await _controller.Search(request) as NotFoundObjectResult;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(404, result.StatusCode);
-
-            var dataResult = result.Value as ErrorDataResult<List<EntityMenu>>;
-            Assert.NotNull(dataResult);
-            Assert.False(dataResult.IsSuccess);
-            Assert.Null(dataResult.Data);
+            Assert.NotNull(result.Data);
+            if (isList)
+            {
+                Assert.Equal(idOrCount, result.Data.Count);
+            }
+            else
+            {
+                Assert.Single(result.Data);
+                Assert.Equal(idOrCount, result.Data.First().Id);
+            }
         }
 
         [Fact]
         public async Task Search_ShouldReturnOk_WhenCacheIsEmpty_AndReturnMenu()
         {
-            // Arrange
+            // Arrange Data
+            SearchMenuQueryRequest request = new() { Keyword = "Keyword" };
             List<EntityMenu>? cachedMenus = null;
             List<EntityMenu> menusFromMediator =
             [
                 new() { Id = 1, ParentId = 0, Name_EN = "Menu1", Keyword = "Keyword1" },
+                new() { Id = 2, ParentId = 0, Name_EN = "Menu2", Keyword = "Keyword2" },
                 new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", Keyword = "Keyword3" },
+                new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword4" },
+                new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5" }
             ];
 
+            // Arrange Service
             SetupCacheService(cachedMenus);
-
-            _mediatorMock.Setup(m => m.Send(It.IsAny<SearchMenuQueryRequest>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new SuccessDataResult<List<EntityMenu>>(menusFromMediator));
-
-            SearchMenuQueryRequest request = new() { Keyword = "Keyword" };
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(new OkDataResponse<List<EntityMenu>>(menusFromMediator));
 
             // Act
-            var result = await _controller.Search(request) as OkObjectResult;
+            var objectResult = await _controller.Search(request) as ObjectResult;
 
-            // Assert
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(200, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkDataResponse<List<EntityMenu>>;
             Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
 
-            var dataResult = result.Value as SuccessDataResult<List<EntityMenu>>;
-            Assert.NotNull(dataResult);
-            Assert.True(dataResult.IsSuccess);
-            Assert.NotNull(dataResult.Data);
-            Assert.Equal(2, dataResult.Data.Count);
-            Assert.Contains(dataResult.Data, menu => menu.Id == 1);
-            Assert.Contains(dataResult.Data, menu => menu.Id == 3);
+            Assert.Empty(result.Message);
+
+            Assert.NotNull(result.Data);
+            Assert.Equal(5, result.Data.Count);
         }
 
         [Fact]
         public async Task Search_ShouldReturnOk_WhenCacheIsEmpty_AndReturnNoMenu()
         {
-            // Arrange
-            List<EntityMenu>? cachedMenus = null;
-
-            SetupCacheService(cachedMenus);
-
-            _mediatorMock.Setup(m => m.Send(It.IsAny<SearchMenuQueryRequest>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new ErrorDataResult<List<EntityMenu>>(ResultMessages.MenuNoDatas));
-
+            // Arrange Data
             SearchMenuQueryRequest request = new() { Keyword = "Keyword6" };
-
-            // Act
-            var result = await _controller.Search(request) as NotFoundObjectResult;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(404, result.StatusCode);
-
-            var dataResult = result.Value as ErrorDataResult<List<EntityMenu>>;
-            Assert.NotNull(dataResult);
-            Assert.False(dataResult.IsSuccess);
-            Assert.Null(dataResult.Data);
-        }
-
-        [Fact]
-        public async Task Search_ShouldReturnBadRequest_WhenCacheIsEmpty_AndReturnNull()
-        {
-            // Arrange
             List<EntityMenu>? cachedMenus = null;
 
+            // Arrange Service
             SetupCacheService(cachedMenus);
-
-            _mediatorMock.Setup(m => m.Send(It.IsAny<SearchMenuQueryRequest>(), It.IsAny<CancellationToken>()))
-                  .ReturnsAsync((IDataResult<List<EntityMenu>>?)null!);
-
-            SearchMenuQueryRequest request = new() { Keyword = "Keyword1" };
-
-            // Act
-            var result = await _controller.Search(request) as BadRequestObjectResult;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(400, result.StatusCode);
-        }
-
-
-        [Fact]
-        public async Task RemoveCache_ShouldReturnOk_WhenCacheIsEmpty()
-        {
-            // Arrange
-            List<EntityMenu>? cachedMenus = null;
-
-            SetupCacheService(cachedMenus);
-
-            // Act
-            var result = await _controller.RemoveCache() as OkObjectResult;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
-
-            var errorResult = result.Value as ErrorResult;
-            Assert.NotNull(errorResult);
-            Assert.False(errorResult.IsSuccess);
-        }
-
-        [Fact]
-        public async Task RemoveCache_ShouldReturnOk_WhenCacheIsNotEmpty_AndCacheRemoved()
-        {
-            // Arrange
-            List<EntityMenu> cachedMenus =
-            [
-                new() { Id = 1, ParentId = 0, Name_EN = "Menu1", Keyword = "Keyword1", SubMenus = [
-                    new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", Keyword = "Keyword3", SubMenus = [] },
-                    new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword4", SubMenus = [
-                        new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5", SubMenus = [] }
-                    ] }
-                ] },
-                new() { Id = 2, ParentId = 0, Name_EN = "Menu2", Keyword = "Keyword2", SubMenus = [] }
-            ];
-
-            SetupCacheService(cachedMenus);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu)).ReturnsAsync(true);
-
-            // Act
-            var result = await _controller.RemoveCache() as OkObjectResult;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
-
-            var successResult = result.Value as SuccessResult;
-            Assert.NotNull(successResult);
-            Assert.True(successResult.IsSuccess);
-        }
-
-        [Fact]
-        public async Task RemoveCache_ShouldReturnInternalServerError_WhenCacheIsNotEmpty_AndCacheNotRemoved()
-        {
-            // Arrange
-            List<EntityMenu> cachedMenus =
-            [
-                new() { Id = 1, ParentId = 0, Name_EN = "Menu1", Keyword = "Keyword1", SubMenus = [
-                    new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", Keyword = "Keyword3", SubMenus = [] },
-                    new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword4", SubMenus = [
-                        new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5", SubMenus = [] }
-                    ] }
-                ] },
-                new() { Id = 2, ParentId = 0, Name_EN = "Menu2", Keyword = "Keyword2", SubMenus = [] }
-            ];
-
-            SetupCacheService(cachedMenus);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu)).ReturnsAsync(false);
-
-            // Act
-            var result = await _controller.RemoveCache() as ObjectResult;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(StatusCodes.Status500InternalServerError, result.StatusCode);
-
-            var errorResult = result.Value as ErrorResult;
-            Assert.NotNull(errorResult);
-            Assert.False(errorResult.IsSuccess);
-        }
-
-
-        [Fact]
-        public async Task Create_ShouldReturnOk_WhenMenuIsCreated()
-        {
-            // Arrange
-            var request = new CreateMenuCommandRequest
-            {
-                ParentId = 0,
-                Name_TR = "TestMenu_TR",
-                Name_EN = "TestMenu_EN",
-                ScreenCode = 1,
-                Type = 1,
-                Priority = 1,
-                Keyword = "test-keyword",
-                Icon = "test-icon",
-                IsGroup = true,
-                IsNew = true,
-                NewStartDate = DateTime.Now,
-                NewEndDate = DateTime.Now.AddDays(1),
-                IsActive = true
-            };
-
-            _mediatorMock.Setup(m => m.Send(It.IsAny<CreateMenuCommandRequest>(), It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new SuccessDataResult<long>(ResultMessages.MenuCreateSuccess, 1));
-
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
-                .ReturnsAsync(true);
-
-            // Act
-            var result = await _controller.Create(request) as OkObjectResult;
-
-            // Assert
-            Assert.NotNull(result);
-            Assert.Equal(200, result.StatusCode);
-
-            var dataResult = result.Value as SuccessDataResult<long>;
-            Assert.NotNull(dataResult);
-            Assert.True(dataResult.IsSuccess);
-            Assert.Equal(1, dataResult.Data);
-        }
-
-        [Fact]
-        public async Task Create_ShouldReturnBadRequest_WhenMenuIsNotCreated()
-        {
-            // Arrange
-            var request = new CreateMenuCommandRequest
-            {
-                ParentId = 0,
-                Name_TR = "TestMenu_TR",
-                Name_EN = "TestMenu_EN",
-                ScreenCode = 1,
-                Type = 1,
-                Priority = 1,
-                Keyword = "test-keyword",
-                Icon = "test-icon",
-                IsGroup = false,
-                IsNew = true,
-                NewStartDate = DateTime.Now,
-                NewEndDate = DateTime.Now.AddDays(1),
-                IsActive = true
-            };
-
             _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
-                .ReturnsAsync(new ErrorDataResult<long>(ResultMessages.MenuCreateError));
-
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
-                .ReturnsAsync(true);
+                         .ReturnsAsync(new NotFoundResponse(ResultMessages.MenuNoDatas));
 
             // Act
-            var result = await _controller.Create(request) as BadRequestObjectResult;
+            var objectResult = await _controller.Search(request) as ObjectResult;
 
-            // Assert
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(404, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as NotFoundResponse;
             Assert.NotNull(result);
-            Assert.Equal(400, result.StatusCode);
 
-            var dataResult = result.Value as ErrorDataResult<long>;
-            Assert.NotNull(dataResult);
-            Assert.False(dataResult.IsSuccess);
+            Assert.Equal(ResultMessages.MenuNoDatas, result.Message);
         }
+
+
+
+        //[Theory]
+        //[InlineData("")]
+        //[InlineData("a")]
+        //[InlineData("ab")]
+        //[InlineData("abc")]
+        //public async Task Search_ShouldReturnBadRequest_WhenInvalidRequestProvided(string keyword)
+        //{
+        //    // Arrange Data
+        //    SearchMenuQueryRequest request = new() { Keyword = keyword };
+
+        //    // Arrange Service
+        //    Mock<AbstractValidator<SearchMenuQueryRequest>> _validatorMock = new();
+        //    _validatorMock.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()));
+
+        //    // Act
+        //    var objectResult = await _controller.Search(request) as ObjectResult;
+
+        //    // Assert Result
+        //    Assert.NotNull(objectResult);
+        //    Assert.Equal(400, objectResult.StatusCode);
+
+        //    // Assert Data Result
+        //    var result = objectResult.Value as BadRequestResponse;
+        //    Assert.NotNull(result);
+
+        //    List<string> errorMessages = [
+        //        ValidationMessages.MenuKeywordEmpty,
+        //        string.Format(ValidationMessages.MenuKeywordMinLength, LengthLimits.MenuKeywordMinLength),
+        //        string.Format(ValidationMessages.MenuKeywordMaxLength, LengthLimits.MenuKeywordMaxLength)
+        //    ];
+        //    Assert.Equal(ResultMessages.MenuNoDatas, result.Message);
+        //}
+
+        //[Theory]
+        //[InlineData("")]
+        //[InlineData("a")]
+        //[InlineData("ab")]
+        //[InlineData("abc")]
+        //public async Task Search_ShouldReturnBadRequest_WhenInvalidRequestProvided(string keyword)
+        //{
+        //    // Arrange Data
+        //    SearchMenuQueryRequest request = new() { Keyword = keyword };
+        //    var validationResult = new ValidationResult(new List<ValidationFailure>
+        //    {
+        //        new ValidationFailure(nameof(request.Keyword), ValidationMessages.MenuKeywordEmpty),
+        //        new ValidationFailure(nameof(request.Keyword), string.Format(ValidationMessages.MenuKeywordMinLength, LengthLimits.MenuKeywordMinLength)),
+        //        new ValidationFailure(nameof(request.Keyword), string.Format(ValidationMessages.MenuKeywordMaxLength, LengthLimits.MenuKeywordMaxLength))
+        //    });
+        //    List<string> errorMessages =
+        //    [
+        //        ValidationMessages.MenuKeywordEmpty,
+        //        string.Format(ValidationMessages.MenuKeywordMinLength, LengthLimits.MenuKeywordMinLength),
+        //        string.Format(ValidationMessages.MenuKeywordMaxLength, LengthLimits.MenuKeywordMaxLength)
+        //    ];
+
+        //    // Arrange Service
+        //    Mock<SearchMenuValidator> _validatorMock = new();
+        //    _validatorMock.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
+        //                 .ReturnsAsync(validationResult);
+
+        //    // Act
+        //    var objectResult = await _controller.Search(request) as ObjectResult;
+
+        //    // Assert Result
+        //    Assert.NotNull(objectResult);
+        //    Assert.Equal(400, objectResult.StatusCode);
+
+        //    // Assert Data Result
+        //    var result = objectResult.Value as BadRequestResponse;
+        //    Assert.NotNull(result);
+
+        //    Assert.Contains(result.Message, errorMessages);
+        //}
+
+
+
+
+
+        //[Fact]
+        //public async Task RemoveCache_ShouldReturnOk_WhenCacheIsEmpty()
+        //{
+        //    // Arrange
+        //    List<EntityMenu>? cachedMenus = null;
+
+        //    SetupCacheService(cachedMenus);
+
+        //    // Act
+        //    var objectResult = await _controller.RemoveCache() as ObjectResult;
+
+        //    // Assert
+        //    Assert.NotNull(objectResult);
+        //    Assert.Equal(200, objectResult.StatusCode);
+
+        //    var errorResult = objectResult.Value as ErrorResult;
+        //    Assert.NotNull(errorResult);
+        //    Assert.False(errorResult.IsSuccess);
+        //}
+
+        //[Fact]
+        //public async Task RemoveCache_ShouldReturnOk_WhenCacheIsNotEmpty_AndCacheRemoved()
+        //{
+        //    // Arrange
+        //    List<EntityMenu> cachedMenus =
+        //    [
+        //        new() { Id = 1, ParentId = 0, Name_EN = "Menu1", Keyword = "Keyword1", SubMenus = [
+        //            new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", Keyword = "Keyword3", SubMenus = [] },
+        //            new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword4", SubMenus = [
+        //                new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5", SubMenus = [] }
+        //            ] }
+        //        ] },
+        //        new() { Id = 2, ParentId = 0, Name_EN = "Menu2", Keyword = "Keyword2", SubMenus = [] }
+        //    ];
+
+        //    SetupCacheService(cachedMenus);
+        //    _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu)).ReturnsAsync(true);
+
+        //    // Act
+        //    var objectResult = await _controller.RemoveCache() as ObjectResult;
+
+        //    // Assert
+        //    Assert.NotNull(objectResult);
+        //    Assert.Equal(200, objectResult.StatusCode);
+
+        //    var successResult = objectResult.Value as SuccessResult;
+        //    Assert.NotNull(successResult);
+        //    Assert.True(successResult.IsSuccess);
+        //}
+
+        //[Fact]
+        //public async Task RemoveCache_ShouldReturnInternalServerError_WhenCacheIsNotEmpty_AndCacheNotRemoved()
+        //{
+        //    // Arrange
+        //    List<EntityMenu> cachedMenus =
+        //    [
+        //        new() { Id = 1, ParentId = 0, Name_EN = "Menu1", Keyword = "Keyword1", SubMenus = [
+        //            new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", Keyword = "Keyword3", SubMenus = [] },
+        //            new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword4", SubMenus = [
+        //                new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5", SubMenus = [] }
+        //            ] }
+        //        ] },
+        //        new() { Id = 2, ParentId = 0, Name_EN = "Menu2", Keyword = "Keyword2", SubMenus = [] }
+        //    ];
+
+        //    SetupCacheService(cachedMenus);
+        //    _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu)).ReturnsAsync(false);
+
+        //    // Act
+        //    var objectResult = await _controller.RemoveCache() as ObjectResult;
+
+        //    // Assert
+        //    Assert.NotNull(objectResult);
+        //    Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+
+        //    var errorResult = objectResult.Value as ErrorResult;
+        //    Assert.NotNull(errorResult);
+        //    Assert.False(errorResult.IsSuccess);
+        //}
+
+
+        //[Fact]
+        //public async Task Create_ShouldReturnOk_WhenMenuIsCreated()
+        //{
+        //    // Arrange
+        //    var request = new CreateMenuCommandRequest
+        //    {
+        //        ParentId = 0,
+        //        Name_TR = "TestMenu_TR",
+        //        Name_EN = "TestMenu_EN",
+        //        ScreenCode = 1,
+        //        Type = 1,
+        //        Priority = 1,
+        //        Keyword = "test-keyword",
+        //        Icon = "test-icon",
+        //        IsGroup = true,
+        //        IsNew = true,
+        //        NewStartDate = DateTime.Now,
+        //        NewEndDate = DateTime.Now.AddDays(1),
+        //        IsActive = true
+        //    };
+
+        //    _mediatorMock.Setup(m => m.Send(It.IsAny<CreateMenuCommandRequest>(), It.IsAny<CancellationToken>()))
+        //        .ReturnsAsync(new OkDataResult<long>(ResultMessages.MenuCreateSuccess, 1));
+
+        //    _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+        //        .ReturnsAsync(true);
+
+        //    // Act
+        //    var objectResult = await _controller.Create(request) as ObjectResult;
+
+        //    // Assert
+        //    Assert.NotNull(objectResult);
+        //    Assert.Equal(200, objectResult.StatusCode);
+
+        //    var result = objectResult.Value as OkDataResult<long>;
+        //    Assert.NotNull(result);
+        //    Assert.Equal(1, result.Data);
+        //}
+
+        //[Fact]
+        //public async Task Create_ShouldReturnBadRequest_WhenMenuIsNotCreated()
+        //{
+        //    // Arrange
+        //    var request = new CreateMenuCommandRequest
+        //    {
+        //        ParentId = 0,
+        //        Name_TR = "TestMenu_TR",
+        //        Name_EN = "TestMenu_EN",
+        //        ScreenCode = 1,
+        //        Type = 1,
+        //        Priority = 1,
+        //        Keyword = "test-keyword",
+        //        Icon = "test-icon",
+        //        IsGroup = false,
+        //        IsNew = true,
+        //        NewStartDate = DateTime.Now,
+        //        NewEndDate = DateTime.Now.AddDays(1),
+        //        IsActive = true
+        //    };
+
+        //    _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+        //        .ReturnsAsync(new ErrorDataResult<long>(ResultMessages.MenuCreateError));
+
+        //    _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+        //        .ReturnsAsync(true);
+
+        //    // Act
+        //    var objectResult = await _controller.Create(request) as ObjectResult;
+
+        //    // Assert
+        //    Assert.NotNull(objectResult);
+        //    Assert.Equal(400, objectResult.StatusCode);
+
+        //    var result = objectResult.Value as NotFoundDataResult<long>;
+        //    Assert.NotNull(result);
+        //}
 
         //[Fact]
         //public async Task Create_ShouldReturnBadRequest_WhenInvalidDataProvided()
@@ -723,20 +733,20 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
 
         //    // Act
         //    Mock<CreateMenuValidator> _validatorMock = new();
-        //    var result = await _validatorMock.Setup(c => c.ValidateAsync(request, It.IsAny<CancellationToken>())).ReturnsAsync();
+        //    var objectResult = await _validatorMock.Setup(c => c.ValidateAsync(request, It.IsAny<CancellationToken>())).ReturnsAsync();
 
         //    // Assert
-        //    result.ShouldHaveValidationErrorFor(x => x.ParentId);
-        //    result.ShouldHaveValidationErrorFor(x => x.Name_TR);
-        //    result.ShouldNotHaveValidationErrorFor(x => x.Name_EN); // This property should be valid
-        //    result.ShouldHaveValidationErrorFor(x => x.ScreenCode);
-        //    result.ShouldHaveValidationErrorFor(x => x.Type);
-        //    result.ShouldHaveValidationErrorFor(x => x.Priority);
-        //    result.ShouldHaveValidationErrorFor(x => x.Keyword);
-        //    result.ShouldNotHaveValidationErrorFor(x => x.Icon); // This property should be valid
-        //    result.ShouldNotHaveValidationErrorFor(x => x.IsGroup); // These properties should be valid
-        //    result.ShouldNotHaveValidationErrorFor(x => x.IsNew);
-        //    result.ShouldNotHaveValidationErrorFor(x => x.IsActive);
+        //    objectResult.ShouldHaveValidationErrorFor(x => x.ParentId);
+        //    objectResult.ShouldHaveValidationErrorFor(x => x.Name_TR);
+        //    objectResult.ShouldNotHaveValidationErrorFor(x => x.Name_EN); // This property should be valid
+        //    objectResult.ShouldHaveValidationErrorFor(x => x.ScreenCode);
+        //    objectResult.ShouldHaveValidationErrorFor(x => x.Type);
+        //    objectResult.ShouldHaveValidationErrorFor(x => x.Priority);
+        //    objectResult.ShouldHaveValidationErrorFor(x => x.Keyword);
+        //    objectResult.ShouldNotHaveValidationErrorFor(x => x.Icon); // This property should be valid
+        //    objectResult.ShouldNotHaveValidationErrorFor(x => x.IsGroup); // These properties should be valid
+        //    objectResult.ShouldNotHaveValidationErrorFor(x => x.IsNew);
+        //    objectResult.ShouldNotHaveValidationErrorFor(x => x.IsActive);
         //}
     }
 }
