@@ -5,7 +5,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace SUPBank.Application.Features.Menu.Queries.Requests
 {
-    public class SearchMenuQueryRequest() : IRequest<IResponse>
+    public class SearchMenuQueryRequest : IRequest<IResponse>
     {
         [MinLength(LengthLimits.MenuKeywordMinLength)]
         [MaxLength(LengthLimits.MenuKeywordMaxLength)]

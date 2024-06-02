@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using MediatR;
-using StackExchange.Redis;
 using SUPBank.Domain.Entities;
 using SUPBank.Domain.Contstants;
 using SUPBank.Domain.Responses.Data;
@@ -16,24 +15,24 @@ namespace SUPBank.Api.Controllers
     [Route("api/menu")]
     public class MenuController : ControllerBase
     {
+        private readonly IValidationService _validationService;
         private readonly IMediator _mediator;
         private readonly IRedisCacheService _cacheService;
-        private readonly IValidationService _validationService;
         private readonly IMenuService _menuService;
 
-        public MenuController(IMediator mediator, IRedisCacheService cacheService, IValidationService validationService, IMenuService menuService)
+        public MenuController(IValidationService validationService, IMediator mediator, IRedisCacheService cacheService, IMenuService menuService)
         {
+            _validationService = validationService;
             _mediator = mediator;
             _cacheService = cacheService;
-            _validationService = validationService;
             _menuService = menuService;
         }
 
         /// <summary>
-        /// Get all menus
+        /// Retrieves all menus.
         /// </summary>
-        /// <param name="request">Empty request body</param>
-        /// <returns>List of menus</returns>
+        /// <param name="request">Empty request body.</param>
+        /// <returns>A list of menus.</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("all")]
@@ -50,8 +49,8 @@ namespace SUPBank.Api.Controllers
             var result = await _mediator.Send(request: request, cancellationToken: HttpContext.RequestAborted);
             if (result.Status == StatusCodes.Status200OK && result is IDataResponse<List<EntityMenu>> dataResult && dataResult != null)
             {
-                // Recursive menu
-                dataResult.Data = _menuService.RecursiveMenu(dataResult.Data).Where(menu => menu.ParentId == 0).ToList();
+                // Generate recursive menus
+                dataResult.Data = _menuService.RecursiveMenus(dataResult.Data);
 
                 // Cache menu
                 await _cacheService.AddCacheAsync(Cache.CacheKeyMenu, dataResult.Data);
@@ -62,17 +61,17 @@ namespace SUPBank.Api.Controllers
         }
 
         /// <summary>
-        /// Get menu by Id
+        /// Retrieves a menu by its ID.
         /// </summary>
-        /// <param name="request">Menu Id</param>
-        /// <returns>A menu</returns>
+        /// <param name="request">The ID of the menu to retrieve.</param>
+        /// <returns>The requested menu.</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("get-by-id")]
         public async Task<IActionResult> GetById([FromQuery] GetMenuByIdQueryRequest request)
         {
-            // Validate request
+            // Validate the request
             var validationResult = await _validationService.ValidateAsync(request, HttpContext.RequestAborted);
             if (validationResult != null)
             {
@@ -83,32 +82,11 @@ namespace SUPBank.Api.Controllers
             var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
             if (cachedMenus != null)
             {
-                // Filter menu by Id from cache
-                var filteredMenu = _menuService.FilterMenuById(cachedMenus, request.Id);
+                // Filter menu by ID from cache
+                var filteredMenu = _menuService.FilterRecursiveMenuById(cachedMenus, request.Id);
                 if (filteredMenu != null)
                 {
-                    // Remove SubMenus property
-                    EntityMenu filteredMenuWithoutSubMenus = new()
-                    {
-                        Id = filteredMenu.Id,
-                        ParentId = filteredMenu.ParentId,
-                        Name_TR = filteredMenu.Name_TR,
-                        Name_EN = filteredMenu.Name_EN,
-                        ScreenCode = filteredMenu.ScreenCode,
-                        Type = filteredMenu.Type,
-                        Priority = filteredMenu.Priority,
-                        Keyword = filteredMenu.Keyword,
-                        Icon = filteredMenu.Icon,
-                        IsGroup = filteredMenu.IsGroup,
-                        IsNew = filteredMenu.IsNew,
-                        NewStartDate = filteredMenu.NewStartDate,
-                        NewEndDate = filteredMenu.NewEndDate,
-                        IsActive = filteredMenu.IsActive,
-                        CreatedDate = filteredMenu.CreatedDate,
-                        LastModifiedDate = filteredMenu.LastModifiedDate
-                    };
-
-                    return StatusCode(StatusCodes.Status200OK, new OkDataResponse<EntityMenu>(filteredMenuWithoutSubMenus));
+                    return StatusCode(StatusCodes.Status200OK, new OkDataResponse<EntityMenu>(filteredMenu));
                 }
             }
 
@@ -118,17 +96,17 @@ namespace SUPBank.Api.Controllers
         }
 
         /// <summary>
-        /// Get menu by Id with sub menus
+        /// Retrieves a menu by its ID along with its sub-menus.
         /// </summary>
-        /// <param name="request">Menu Id</param>
-        /// <returns>A menu with sub menus</returns>
+        /// <param name="request">The ID of the menu to retrieve.</param>
+        /// <returns>The requested menu with sub-menus.</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status404NotFound)]
         [HttpGet("get-by-id-with-submenus")]
         public async Task<IActionResult> GetByIdWithSubMenus([FromQuery] GetMenuByIdWithSubMenusQueryRequest request)
         {
-            // Validate request
+            // Validate the request
             var validationResult = await _validationService.ValidateAsync(request, HttpContext.RequestAborted);
             if (validationResult != null)
             {
@@ -140,7 +118,7 @@ namespace SUPBank.Api.Controllers
             if (cachedMenus != null)
             {
                 // Filter menu by Id from cache
-                var filteredMenu = _menuService.FilterMenuById(cachedMenus, request.Id);
+                var filteredMenu = _menuService.FilterRecursiveMenuByIdWithSubMenus(cachedMenus, request.Id);
                 if (filteredMenu != null)
                 {
                     return StatusCode(StatusCodes.Status200OK, new OkDataResponse<EntityMenu>(filteredMenu));
@@ -151,8 +129,8 @@ namespace SUPBank.Api.Controllers
             var result = await _mediator.Send(request: request, cancellationToken: HttpContext.RequestAborted);
             if (result.Status == StatusCodes.Status200OK && result is IDataResponse<List<EntityMenu>> dataResult && dataResult != null)
             {
-                // Recursive menu
-                var parentMenu = _menuService.RecursiveMenu(dataResult.Data).First(menu => menu.Id == request.Id);
+                // Generate recursive menu
+                var parentMenu = _menuService.RecursiveMenu(dataResult.Data, request.Id);
 
                 return StatusCode(dataResult.Status, new OkDataResponse<EntityMenu>(parentMenu));
             }
@@ -170,7 +148,7 @@ namespace SUPBank.Api.Controllers
         [HttpGet("search")]
         public async Task<IActionResult> Search([FromQuery] SearchMenuQueryRequest request)
         {
-            // Validate request
+            // Validate the request
             var validationResult = await _validationService.ValidateAsync(request, HttpContext.RequestAborted);
             if (validationResult != null)
             {
@@ -181,32 +159,11 @@ namespace SUPBank.Api.Controllers
             var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
             if (cachedMenus != null)
             {
-                // Filter menus by Keyword from cache
-                var filteredMenus = _menuService.FilterMenusByKeyword(cachedMenus, request.Keyword);
-                if (filteredMenus.Count != 0)
+                // Filter menu by Keyword from cache
+                var filteredMenus = _menuService.FilterRecursiveMenusByKeyword(cachedMenus, request.Keyword);
+                if (filteredMenus != null)
                 {
-                    // Remove SubMenus property
-                    var filteredMenusWithoutSubMenus = filteredMenus.Select(filteredMenu => new EntityMenu
-                    {
-                        Id = filteredMenu.Id,
-                        ParentId = filteredMenu.ParentId,
-                        Name_TR = filteredMenu.Name_TR,
-                        Name_EN = filteredMenu.Name_EN,
-                        ScreenCode = filteredMenu.ScreenCode,
-                        Type = filteredMenu.Type,
-                        Priority = filteredMenu.Priority,
-                        Keyword = filteredMenu.Keyword,
-                        Icon = filteredMenu.Icon,
-                        IsGroup = filteredMenu.IsGroup,
-                        IsNew = filteredMenu.IsNew,
-                        NewStartDate = filteredMenu.NewStartDate,
-                        NewEndDate = filteredMenu.NewEndDate,
-                        IsActive = filteredMenu.IsActive,
-                        CreatedDate = filteredMenu.CreatedDate,
-                        LastModifiedDate = filteredMenu.LastModifiedDate
-                    }).ToList();
-
-                    return StatusCode(StatusCodes.Status200OK, new OkDataResponse<List<EntityMenu>>(filteredMenusWithoutSubMenus));
+                    return StatusCode(StatusCodes.Status200OK, new OkDataResponse<List<EntityMenu>>(filteredMenus));
                 }
             }
 
@@ -216,10 +173,9 @@ namespace SUPBank.Api.Controllers
         }
 
         /// <summary>
-        /// Remove Cached Menu
+        /// Removes the cached menu.
         /// </summary>
-        /// <param name="request">Empty request body</param>
-        /// <returns>True if the menu cache removed successfully, false otherwise</returns>
+        /// <returns>True if the menu cache is removed successfully; otherwise, false.</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpGet("remove-cache")]
@@ -237,21 +193,23 @@ namespace SUPBank.Api.Controllers
             {
                 return StatusCode(StatusCodes.Status200OK, new OkResponse(ResultMessages.MenuCacheRemoved));
             }
+
+            // If cache removal fails
             return StatusCode(StatusCodes.Status500InternalServerError, new InternalServerErrorResponse(ResultMessages.MenuCacheCouldNotRemoved));
         }
 
         /// <summary>
-        /// Create Menu
+        /// Creates a menu.
         /// </summary>
-        /// <param name="request">Menu Features</param>
-        /// <returns>Created Menu Id if the menu is created successfully, false otherwise</returns>
+        /// <param name="request">The features of the menu to create.</param>
+        /// <returns>The ID of the created menu if successful; otherwise, false.</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [ProducesResponseType(StatusCodes.Status500InternalServerError)]
         [HttpPost("create")]
         public async Task<IActionResult> Create([FromBody] CreateMenuCommandRequest request)
         {
-            // Validate request
+            // Validate the request
             var validationResult = await _validationService.ValidateAsync(request, HttpContext.RequestAborted);
             if (validationResult != null)
             {
@@ -262,23 +220,23 @@ namespace SUPBank.Api.Controllers
             var result = await _mediator.Send(request: request, cancellationToken: HttpContext.RequestAborted);
             if (result.Status == StatusCodes.Status200OK && result is IDataResponse<long> dataResult && dataResult != null)
             {
-                // Remove cache
+                // If menu creation is successful, remove the menu cache
                 await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu);
             }
             return StatusCode(result.Status, result);
         }
 
         /// <summary>
-        /// Update Menu
+        /// Updates a menu.
         /// </summary>
-        /// <param name="request">Menu Features</param>
-        /// <returns>True if the menu is updated successfully, false otherwise</returns>
+        /// <param name="request">The features of the menu to update.</param>
+        /// <returns>True if the menu is updated successfully; otherwise, false.</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut("update")]
         public async Task<IActionResult> Update([FromBody] UpdateMenuCommandRequest request)
         {
-            // Validate request
+            // Validate the request
             var validationResult = await _validationService.ValidateAsync(request, HttpContext.RequestAborted);
             if (validationResult != null)
             {
@@ -289,23 +247,23 @@ namespace SUPBank.Api.Controllers
             var result = await _mediator.Send(request: request, cancellationToken: HttpContext.RequestAborted);
             if (result.Status == StatusCodes.Status200OK)
             {
-                // Remove cache
+                // If menu update is successful, remove the menu cache
                 await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu);
             }
             return StatusCode(result.Status, result);
         }
 
         /// <summary>
-        /// Delete Menu
+        /// Deletes a menu.
         /// </summary>
-        /// <param name="request">Menu Id</param>
-        /// <returns>True if the menu is deleted successfully, false otherwise</returns>
+        /// <param name="request">The ID of the menu to delete.</param>
+        /// <returns>True if the menu is deleted successfully; otherwise, false.</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpDelete("delete")]
         public async Task<IActionResult> Delete([FromBody] DeleteMenuCommandRequest request)
         {
-            // Validate request
+            // Validate the request
             var validationResult = await _validationService.ValidateAsync(request, HttpContext.RequestAborted);
             if (validationResult != null)
             {
@@ -316,23 +274,23 @@ namespace SUPBank.Api.Controllers
             var result = await _mediator.Send(request: request, cancellationToken: HttpContext.RequestAborted);
             if (result.Status == StatusCodes.Status200OK)
             {
-                // Remove cache
+                // If menu deletion is successful, remove the menu cache
                 await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu);
             }
             return StatusCode(result.Status, result);
         }
 
         /// <summary>
-        /// Rollback Menu By Id
+        /// Rolls back a menu by its ID.
         /// </summary>
-        /// <param name="request">Menu Id</param>
-        /// <returns>True if the menu is rollbacked successfully, false otherwise</returns>
+        /// <param name="request">The ID of the menu to rollback.</param>
+        /// <returns>True if the menu is successfully rolled back; otherwise, false.</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut("rollback-by-id")]
         public async Task<IActionResult> RolllbackById([FromBody] RollbackMenuByIdCommandRequest request)
         {
-            // Validate request
+            // Validate the request
             var validationResult = await _validationService.ValidateAsync(request, HttpContext.RequestAborted);
             if (validationResult != null)
             {
@@ -345,16 +303,16 @@ namespace SUPBank.Api.Controllers
         }
 
         /// <summary>
-        /// Rollback Menu By Screen Code
+        /// Rolls back a menu by its screen code.
         /// </summary>
-        /// <param name="request">Screen Code</param>
-        /// <returns>True if the menu is rollbacked successfully, false otherwise</returns>
+        /// <param name="request">The screen code of the menu to rollback.</param>
+        /// <returns>True if the menu is successfully rolled back; otherwise, false.</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut("rollback-by-screencode")]
         public async Task<IActionResult> RolllbackByScreenCode([FromBody] RollbackMenuByScreenCodeCommandRequest request)
         {
-            // Validate request
+            // Validate the request
             var validationResult = await _validationService.ValidateAsync(request, HttpContext.RequestAborted);
             if (validationResult != null)
             {
@@ -367,16 +325,16 @@ namespace SUPBank.Api.Controllers
         }
 
         /// <summary>
-        /// Rollback Menus By Token
+        /// Rolls back menus by token.
         /// </summary>
-        /// <param name="request">Token</param>
-        /// <returns>Rollbacked row count if the menu is rollbacked successfully, false otherwise</returns>
+        /// <param name="request">The token used to identify menus to rollback.</param>
+        /// <returns>The number of rows rollbacked if the menu is rollbacked successfully; otherwise, false.</returns>
         [ProducesResponseType(StatusCodes.Status200OK)]
         [ProducesResponseType(StatusCodes.Status400BadRequest)]
         [HttpPut("rollback-by-token")]
         public async Task<IActionResult> RolllbackByToken([FromBody] RollbackMenusByTokenCommandRequest request)
         {
-            // Validate request
+            // Validate the request
             var validationResult = await _validationService.ValidateAsync(request, HttpContext.RequestAborted);
             if (validationResult != null)
             {
