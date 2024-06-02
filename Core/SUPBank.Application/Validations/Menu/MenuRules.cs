@@ -40,7 +40,7 @@ namespace SUPBank.Application.Validations.Menu
                 .NotNull().WithMessage(ValidationMessages.MenuPriorityNull)
                 .GreaterThanOrEqualTo(0).WithMessage(ValidationMessages.MenuPriorityPositiveOrZero);
         }
-
+        
         public static IRuleBuilderOptions<T, string> ValidateMenuKeyword<T>(this IRuleBuilder<T, string> ruleBuilder)
         {
             return ruleBuilder

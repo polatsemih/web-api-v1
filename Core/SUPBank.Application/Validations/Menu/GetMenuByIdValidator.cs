@@ -1,5 +1,5 @@
 ﻿using FluentValidation;
-using SUPBank.Application.Features.Menu.Queries;
+using SUPBank.Application.Features.Menu.Queries.Requests;
 using SUPBank.Application.Validations.Common;
 
 namespace SUPBank.Application.Validations.Menu
