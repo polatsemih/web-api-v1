@@ -1,12 +1,11 @@
-﻿using FluentValidation;
-using Microsoft.Extensions.Configuration;
+﻿using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using StackExchange.Redis;
-using SUPBank.Application.Features.Menu.Commands.Requests;
-using SUPBank.Application.Features.Menu.Queries.Requests;
 using SUPBank.Application.Interfaces.Services;
+using SUPBank.Application.Interfaces.Services.Controllers;
 using SUPBank.Domain.Contstants;
 using SUPBank.Infrastructure.Services;
+using SUPBank.Infrastructure.Services.Controller;
 
 namespace SUPBank.Infrastructure
 {
@@ -28,6 +27,8 @@ namespace SUPBank.Infrastructure
             string redisConnectionString = configuration.GetConnectionString("RedisConnection") ?? throw new InvalidOperationException(ExceptionMessages.RedisConnectionStringInvalid);
             ConnectionMultiplexer multiplexer = ConnectionMultiplexer.Connect(redisConnectionString) ?? throw new InvalidOperationException(ExceptionMessages.RedisConnectionError);
             services.AddSingleton<IConnectionMultiplexer>(multiplexer);
+
+            services.AddTransient<IMenuService, MenuService>();
         }
     }
 }

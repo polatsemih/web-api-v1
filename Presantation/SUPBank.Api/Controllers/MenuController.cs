@@ -8,6 +8,7 @@ using SUPBank.Domain.Responses;
 using SUPBank.Application.Interfaces.Services;
 using SUPBank.Application.Features.Menu.Queries.Requests;
 using SUPBank.Application.Features.Menu.Commands.Requests;
+using SUPBank.Application.Interfaces.Services.Controllers;
 
 namespace SUPBank.Api.Controllers
 {
@@ -18,73 +19,15 @@ namespace SUPBank.Api.Controllers
         private readonly IMediator _mediator;
         private readonly IRedisCacheService _cacheService;
         private readonly IValidationService _validationService;
+        private readonly IMenuService _menuService;
 
-        public MenuController(IMediator mediator, IRedisCacheService cacheService, IValidationService validationService)
+        public MenuController(IMediator mediator, IRedisCacheService cacheService, IValidationService validationService, IMenuService menuService)
         {
             _mediator = mediator;
             _cacheService = cacheService;
             _validationService = validationService;
+            _menuService = menuService;
         }
-
-        private List<EntityMenu> RecursiveMenu(List<EntityMenu> menus)
-        {
-            var menuDictionary = menus.ToDictionary(menu => menu.Id);
-            foreach (var menu in menus)
-            {
-                if (menu.ParentId != 0 && menuDictionary.TryGetValue(menu.ParentId, out var parentMenu))
-                {
-                    parentMenu.SubMenus.Add(menu);
-                }
-            }
-            return menus;
-        }
-
-        private EntityMenu? FilterMenuById(List<EntityMenu> menus, long id)
-        {
-            foreach (var menu in menus)
-            {
-                if (menu.Id == id)
-                {
-                    return menu;
-                }
-
-                if (menu.SubMenus != null)
-                {
-                    var subMenu = FilterMenuById(menu.SubMenus, id);
-                    if (subMenu != null)
-                    {
-                        return subMenu;
-                    }
-                }
-            }
-            return default;
-        }
-
-        private List<EntityMenu> FilterMenusByKeyword(List<EntityMenu> menus, string keyword)
-        {
-            List<EntityMenu> filteredMenus = [];
-
-            foreach (var menu in menus)
-            {
-                if (menu.Keyword != null && menu.Keyword.Contains(keyword, StringComparison.OrdinalIgnoreCase))
-                {
-                    filteredMenus.Add(menu);
-                }
-
-                if (menu.SubMenus != null)
-                {
-                    var subMenus = FilterMenusByKeyword(menu.SubMenus, keyword);
-                    if (subMenus.Count != 0)
-                    {
-                        filteredMenus.AddRange(subMenus);
-                    }
-                }
-            }
-
-            return filteredMenus.OrderBy(menu => menu.Id).ToList();
-        }
-
-
 
         /// <summary>
         /// Get all menus
@@ -108,7 +51,7 @@ namespace SUPBank.Api.Controllers
             if (result.Status == StatusCodes.Status200OK && result is IDataResponse<List<EntityMenu>> dataResult && dataResult != null)
             {
                 // Recursive menu
-                dataResult.Data = RecursiveMenu(dataResult.Data).Where(menu => menu.ParentId == 0).ToList();
+                dataResult.Data = _menuService.RecursiveMenu(dataResult.Data).Where(menu => menu.ParentId == 0).ToList();
 
                 // Cache menu
                 await _cacheService.AddCacheAsync(Cache.CacheKeyMenu, dataResult.Data);
@@ -141,7 +84,7 @@ namespace SUPBank.Api.Controllers
             if (cachedMenus != null)
             {
                 // Filter menu by Id from cache
-                var filteredMenu = FilterMenuById(cachedMenus, request.Id);
+                var filteredMenu = _menuService.FilterMenuById(cachedMenus, request.Id);
                 if (filteredMenu != null)
                 {
                     // Remove SubMenus property
@@ -197,7 +140,7 @@ namespace SUPBank.Api.Controllers
             if (cachedMenus != null)
             {
                 // Filter menu by Id from cache
-                var filteredMenu = FilterMenuById(cachedMenus, request.Id);
+                var filteredMenu = _menuService.FilterMenuById(cachedMenus, request.Id);
                 if (filteredMenu != null)
                 {
                     return StatusCode(StatusCodes.Status200OK, new OkDataResponse<EntityMenu>(filteredMenu));
@@ -209,7 +152,7 @@ namespace SUPBank.Api.Controllers
             if (result.Status == StatusCodes.Status200OK && result is IDataResponse<List<EntityMenu>> dataResult && dataResult != null)
             {
                 // Recursive menu
-                var parentMenu = RecursiveMenu(dataResult.Data).First(menu => menu.Id == request.Id);
+                var parentMenu = _menuService.RecursiveMenu(dataResult.Data).First(menu => menu.Id == request.Id);
 
                 return StatusCode(dataResult.Status, new OkDataResponse<EntityMenu>(parentMenu));
             }
@@ -239,7 +182,7 @@ namespace SUPBank.Api.Controllers
             if (cachedMenus != null)
             {
                 // Filter menus by Keyword from cache
-                var filteredMenus = FilterMenusByKeyword(cachedMenus, request.Keyword);
+                var filteredMenus = _menuService.FilterMenusByKeyword(cachedMenus, request.Keyword);
                 if (filteredMenus.Count != 0)
                 {
                     // Remove SubMenus property
