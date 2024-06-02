@@ -10,7 +10,10 @@ namespace SUPBank.Persistence
     {
         public static void AddPersistenceDependencies(this IServiceCollection services)
         {
+            // Register dapper
             services.AddScoped<IDapperContext, DapperContext>();
+
+            // Register menu repositories
             services.AddScoped<IMenuQueryRepository, DapperMenuQueryRepository>();
             services.AddScoped<IMenuCommandRepository, DapperMenuCommandRepository>();
         }

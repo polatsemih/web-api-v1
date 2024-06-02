@@ -4,9 +4,9 @@ using SUPBank.Application.Validations.Common;
 
 namespace SUPBank.Application.Validations.Menu
 {
-    public class GetMenuByIdValidator : AbstractValidator<GetMenuByIdQueryRequest>
+    public class GetMenuByIdWithSubMenusValidator : AbstractValidator<GetMenuByIdWithSubMenusQueryRequest>
     {
-        public GetMenuByIdValidator()
+        public GetMenuByIdWithSubMenusValidator()
         {
             RuleFor(r => r.Id).ValidateId();
         }

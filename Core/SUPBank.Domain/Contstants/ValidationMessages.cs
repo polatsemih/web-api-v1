@@ -3,6 +3,7 @@
     public class ValidationMessages
     {
         public const string IdEmpty = "Id cannot be empty";
+        public const string IdPositive = "Id must be greater than 0";
         public const string IsActiveNull = "IsActive cannot be null";
         public const string RollbackTokenEmpty = "RollbackToken cannot be empty";
 

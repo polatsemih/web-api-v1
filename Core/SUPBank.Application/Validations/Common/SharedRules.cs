@@ -8,7 +8,8 @@ namespace SUPBank.Application.Validations.Common
         public static IRuleBuilderOptions<T, long> ValidateId<T>(this IRuleBuilder<T, long> ruleBuilder)
         {
             return ruleBuilder
-                .NotEmpty().WithMessage(ValidationMessages.IdEmpty);
+                .NotEmpty().WithMessage(ValidationMessages.IdEmpty)
+                 .GreaterThan(0).WithMessage(ValidationMessages.IdPositive);
         }
 
         public static IRuleBuilderOptions<T, bool> ValidateIsActive<T>(this IRuleBuilder<T, bool> ruleBuilder)

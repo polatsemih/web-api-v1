@@ -13,10 +13,16 @@ namespace SUPBank.Application
         {
             var assembly = Assembly.GetExecutingAssembly();
 
+            // Register MediatR services
             services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(assembly));
+
+            // Register AutoMapper
             services.AddAutoMapper(assembly);
+
+            // Register FluentValidation validators
             services.AddValidatorsFromAssembly(assembly);
 
+            // Register menu validators for specific requests
             services.AddTransient<IValidator<SearchMenuQueryRequest>, SearchMenuValidator>();
             services.AddTransient<IValidator<CreateMenuCommandRequest>, CreateMenuValidator>();
             services.AddTransient<IValidator<DeleteMenuCommandRequest>, DeleteMenuValidator>();
