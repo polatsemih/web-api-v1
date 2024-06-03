@@ -30,29 +30,35 @@ namespace SUPBank.UnitTests.xUnit.Utilities.Helpers
                            .Returns(filteredMenu);
         }
 
+        public static void SetupMenuServiceFilterRecursiveMenusByKeyword(Mock<IMenuService> menuServiceMock, List<EntityMenu> menus, string keyword, List<EntityMenu> filteredMenus)
+        {
+            menuServiceMock.Setup(m => m.FilterRecursiveMenusByKeyword(menus, keyword))
+                           .Returns(filteredMenus);
+        }
+
         public static List<EntityMenu> GetMenusMock()
         {
             return
             [
-                new() { Id = 1, ParentId = 0, Name_EN = "Menu1" },
-                new() { Id = 2, ParentId = 0, Name_EN = "Menu2" },
-                new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1" },
-                new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2" },
-                new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1" }
+                new() { Id = 1, ParentId = 0, Name_EN = "Menu1", Keyword = "Keyword1" },
+                new() { Id = 2, ParentId = 0, Name_EN = "Menu2", Keyword = "Keyword2" },
+                new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", Keyword = "Keyword3" },
+                new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword4" },
+                new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5" }
             ];
         }
-
+        
         public static List<EntityMenu> GetRecursiveMenusMock()
         {
             return
             [
-                new() { Id = 1, ParentId = 0, Name_EN = "Menu1", SubMenus = [
-                    new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", SubMenus = [] },
-                    new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", SubMenus = [
-                        new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", SubMenus = [] }
+                new() { Id = 1, ParentId = 0, Name_EN = "Menu1", Keyword = "Keyword1", SubMenus = [
+                    new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", Keyword = "Keyword3", SubMenus = [] },
+                    new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword4", SubMenus = [
+                        new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5", SubMenus = [] }
                     ] }
                 ] },
-                new() { Id = 2, ParentId = 0, Name_EN = "Menu2", SubMenus = [] }
+                new() { Id = 2, ParentId = 0, Name_EN = "Menu2", Keyword = "Keyword2", SubMenus = [] }
             ];
         }
 
