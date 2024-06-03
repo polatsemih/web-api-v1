@@ -3,7 +3,6 @@ using Microsoft.AspNetCore.Http;
 using Xunit;
 using Moq;
 using MediatR;
-using SUPBank.Api.Controllers;
 using SUPBank.UnitTests.xUnit.Utilities.Helpers;
 using SUPBank.Domain.Contstants;
 using SUPBank.Domain.Entities;
@@ -15,8 +14,9 @@ using SUPBank.Application.Interfaces.Services.Controllers;
 using SUPBank.Application.Features.Menu.Commands.Requests;
 using SUPBank.Application.Interfaces.Repositories;
 using AutoMapper;
+using SUPBank.Api.Controllers.V3;
 
-namespace SUPBank.UnitTests.xUnit.Presantation.Api
+namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
 {
     public class MenuControllerTests
     {
@@ -1078,7 +1078,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
         public async Task Delete_ShouldReturnBadRequest_WhenGivenIdNotExists()
         {
             // Arrange Data
-            var request = new DeleteMenuCommandRequest { Id = 1};
+            var request = new DeleteMenuCommandRequest { Id = 1 };
             var expectedErrorMessage = null as string;
             var mediatorResponse = new BadRequestResponse(ResultMessages.MenuIdNotExist);
 

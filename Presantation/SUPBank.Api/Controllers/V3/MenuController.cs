@@ -1,4 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
+using Asp.Versioning;
 using MediatR;
 using SUPBank.Domain.Entities;
 using SUPBank.Domain.Contstants;
@@ -9,10 +10,11 @@ using SUPBank.Application.Features.Menu.Queries.Requests;
 using SUPBank.Application.Features.Menu.Commands.Requests;
 using SUPBank.Application.Interfaces.Services.Controllers;
 
-namespace SUPBank.Api.Controllers
+namespace SUPBank.Api.Controllers.V3
 {
+    [ApiVersion("3.0")]
+    [Route("api/v{version:apiVersion}/menu")]
     [ApiController]
-    [Route("api/menu")]
     public class MenuController : ControllerBase
     {
         private readonly IValidationService _validationService;

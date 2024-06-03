@@ -47,7 +47,7 @@ namespace SUPBank.UnitTests.xUnit.Utilities.Helpers
                 new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5" }
             ];
         }
-        
+
         public static List<EntityMenu> GetRecursiveMenusMock()
         {
             return
