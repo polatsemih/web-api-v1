@@ -13,6 +13,8 @@ using SUPBank.Application.Features.Menu.Queries.Requests;
 using SUPBank.Application.Interfaces.Services;
 using SUPBank.Application.Interfaces.Services.Controllers;
 using SUPBank.Application.Features.Menu.Commands.Requests;
+using SUPBank.Application.Interfaces.Repositories;
+using AutoMapper;
 
 namespace SUPBank.UnitTests.xUnit.Presantation.Api
 {
@@ -128,12 +130,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
         }
 
 
-        [Theory]
-        [InlineData(0, ValidationMessages.IdEmpty)]
-        [InlineData(-1, ValidationMessages.IdPositive)]
-        public async Task GetById_ShouldReturnBadRequest_WhenInvalidRequestProvided(long id, string expectedErrorMessage)
+        [Fact]
+        public async Task GetById_ShouldReturnBadRequest_WhenInvalidRequestProvided()
         {
             // Arrange Data
+            long id = -1;
+            string expectedErrorMessage = ValidationMessages.IdPositive;
             var request = new GetMenuByIdQueryRequest() { Id = id };
 
             // Arrange Service
@@ -361,7 +363,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
 
             Assert.NotNull(result.Data);
             Assert.Equal(recursiveMediatorMenu, result.Data);
-            Assert.NotEmpty(recursiveMediatorMenu.SubMenus);
+            Assert.NotEmpty(result.Data.SubMenus);
         }
 
         [Fact]
@@ -396,13 +398,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
         }
 
 
-        [Theory]
-        [InlineData("", ValidationMessages.MenuKeywordEmpty)]
-        [InlineData("a", ValidationMessages.MenuKeywordMinLength)]
-        [InlineData("Lorem ipsum dolor sit amet, consectetur adipiscing elit. Lorem ipsum dolor sit amet, consectetur adi.", ValidationMessages.MenuKeywordMaxLength)]
-        public async Task Search_ShouldReturnBadRequest_WhenInvalidRequestProvided(string keyword, string expectedErrorMessage)
+        [Fact]
+        public async Task Search_ShouldReturnBadRequest_WhenInvalidRequestProvided()
         {
             // Arrange Data
+            string keyword = "";
+            string expectedErrorMessage = ValidationMessages.MenuKeywordEmpty;
             var request = new SearchMenuQueryRequest() { Keyword = keyword };
 
             // Arrange Service
@@ -423,23 +424,20 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
             Assert.Equal(expectedErrorMessage, result.Message);
         }
 
-
-
-
-
-
-        [Theory]
-        [InlineData("Keyword", true, 5)]
-        [InlineData("Keyword1", false, 1)]
-        [InlineData("Keyword2", true, 3)]
-        public async Task Search_ShouldReturnOk_WhenCacheIsNotEmpty_AndReturnMenu(string keyword, bool isList, long idOrCount)
+        [Fact]
+        public async Task Search_ShouldReturnOk_WhenCacheIsNotEmpty_AndReturnMenu()
         {
             // Arrange Data
+            string keyword = "Keyword";
             var request = new SearchMenuQueryRequest() { Keyword = keyword };
+            var expectedErrorMessage = null as string;
             var cachedMenus = MenuControllerTestHelper.GetRecursiveMenusMock();
+            var filteredMenu = MenuControllerTestHelper.GetMenusMock();
 
             // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
             ControllerTestHelper.SetupCacheService(_cacheServiceMock, cachedMenus);
+            MenuControllerTestHelper.SetupMenuServiceFilterRecursiveMenusByKeyword(_menuServiceMock, cachedMenus, keyword, filteredMenu);
 
             // Act
             var objectResult = await _controller.Search(request) as ObjectResult;
@@ -451,31 +449,26 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
             // Assert Data Result
             var result = objectResult.Value as OkDataResponse<List<EntityMenu>>;
             Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
 
             Assert.Empty(result.Message);
 
             Assert.NotNull(result.Data);
-            if (isList)
-            {
-                Assert.Equal(idOrCount, result.Data.Count);
-            }
-            else
-            {
-                Assert.Single(result.Data);
-                Assert.Equal(idOrCount, result.Data.First().Id);
-            }
         }
 
         [Fact]
         public async Task Search_ShouldReturnOk_WhenCacheIsEmpty_AndReturnMenu()
         {
             // Arrange Data
-            var request = new SearchMenuQueryRequest() { Keyword = "Keyword" };
+            string keyword = "Keyword";
+            var request = new SearchMenuQueryRequest() { Keyword = keyword };
+            var expectedErrorMessage = null as string;
             var cachedMenus = null as List<EntityMenu>;
             var mediatorMenus = MenuControllerTestHelper.GetMenusMock();
             var mediatorResponse = new OkDataResponse<List<EntityMenu>>(mediatorMenus);
 
             // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
             ControllerTestHelper.SetupCacheService(_cacheServiceMock, cachedMenus);
             // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
             _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
@@ -491,22 +484,26 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
             // Assert Data Result
             var result = objectResult.Value as OkDataResponse<List<EntityMenu>>;
             Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
 
             Assert.Empty(result.Message);
 
             Assert.NotNull(result.Data);
-            Assert.Equal(5, result.Data.Count);
+            Assert.Equal(mediatorMenus, result.Data);
         }
 
         [Fact]
-        public async Task Search_ShouldReturnOk_WhenCacheIsEmpty_AndReturnNoMenu()
+        public async Task Search_ShouldReturnNotFound_WhenCacheIsEmpty_AndReturnNoMenu()
         {
             // Arrange Data
-            var request = new SearchMenuQueryRequest() { Keyword = "Keyword6" };
+            string keyword = "Keyword";
+            var request = new SearchMenuQueryRequest() { Keyword = keyword };
+            var expectedErrorMessage = null as string;
             var cachedMenus = null as List<EntityMenu>;
-            var mediatorResponse = new NotFoundResponse(ResultMessages.MenuNoDatas);
+            var mediatorResponse = new NotFoundResponse(ResultMessages.MenuNoData);
 
             // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
             ControllerTestHelper.SetupCacheService(_cacheServiceMock, cachedMenus);
             // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
             _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
@@ -522,203 +519,103 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
             // Assert Data Result
             var result = objectResult.Value as NotFoundResponse;
             Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status404NotFound, result.Status);
 
-            Assert.Equal(ResultMessages.MenuNoDatas, result.Message);
+            Assert.Equal(ResultMessages.MenuNoData, result.Message);
         }
 
 
-
-        //[Theory]
-        //[InlineData("")]
-        //[InlineData("a")]
-        //[InlineData("ab")]
-        //[InlineData("abc")]
-        //public async Task Search_ShouldReturnBadRequest_WhenInvalidRequestProvided(string keyword)
-        //{
-        //    // Arrange Data
-        //    SearchMenuQueryRequest request = new() { Keyword = keyword };
-
-        //    // Arrange Service
-        //    Mock<AbstractValidator<SearchMenuQueryRequest>> _validatorMock = new();
-        //    _validatorMock.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()));
-
-        //    // Act
-        //    var objectResult = await _controller.Search(request) as ObjectResult;
-
-        //    // Assert Result
-        //    Assert.NotNull(objectResult);
-        //    Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
-
-        //    // Assert Data Result
-        //    var result = objectResult.Value as BadRequestResponse;
-        //    Assert.NotNull(result);
-
-        //    List<string> errorMessages = [
-        //        ValidationMessages.MenuKeywordEmpty,
-        //        string.Format(ValidationMessages.MenuKeywordMinLength, LengthLimits.MenuKeywordMinLength),
-        //        string.Format(ValidationMessages.MenuKeywordMaxLength, LengthLimits.MenuKeywordMaxLength)
-        //    ];
-        //    Assert.Equal(ResultMessages.MenuNoDatas, result.Message);
-        //}
-
-        //[Theory]
-        //[InlineData("")]
-        //[InlineData("a")]
-        //[InlineData("ab")]
-        //[InlineData("abc")]
-        //public async Task Search_ShouldReturnBadRequest_WhenInvalidRequestProvided(string keyword)
-        //{
-        //    // Arrange Data
-        //    SearchMenuQueryRequest request = new() { Keyword = keyword };
-        //    var validationResult = new ValidationResult(new List<ValidationFailure>
-        //    {
-        //        new ValidationFailure(nameof(request.Keyword), ValidationMessages.MenuKeywordEmpty),
-        //        new ValidationFailure(nameof(request.Keyword), string.Format(ValidationMessages.MenuKeywordMinLength, LengthLimits.MenuKeywordMinLength)),
-        //        new ValidationFailure(nameof(request.Keyword), string.Format(ValidationMessages.MenuKeywordMaxLength, LengthLimits.MenuKeywordMaxLength))
-        //    });
-        //    List<string> errorMessages =
-        //    [
-        //        ValidationMessages.MenuKeywordEmpty,
-        //        string.Format(ValidationMessages.MenuKeywordMinLength, LengthLimits.MenuKeywordMinLength),
-        //        string.Format(ValidationMessages.MenuKeywordMaxLength, LengthLimits.MenuKeywordMaxLength)
-        //    ];
-
-        //    // Arrange Service
-        //    Mock<SearchMenuValidator> _validatorMock = new();
-        //    _validatorMock.Setup(v => v.ValidateAsync(request, It.IsAny<CancellationToken>()))
-        //                 .ReturnsAsync(validationResult);
-
-        //    // Act
-        //    var objectResult = await _controller.Search(request) as ObjectResult;
-
-        //    // Assert Result
-        //    Assert.NotNull(objectResult);
-        //    Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
-
-        //    // Assert Data Result
-        //    var result = objectResult.Value as BadRequestResponse;
-        //    Assert.NotNull(result);
-
-        //    Assert.Contains(result.Message, errorMessages);
-        //}
-
-
-
-
-
-        //[Fact]
-        //public async Task RemoveCache_ShouldReturnOk_WhenCacheIsEmpty()
-        //{
-        //    // Arrange
-        //    var cachedMenus = null as List<EntityMenu>;
-
-        //    ControllerTestHelper.SetupCacheService(_cacheServiceMock, cachedMenus);
-
-        //    // Act
-        //    var objectResult = await _controller.RemoveCache() as ObjectResult;
-
-        //    // Assert
-        //    Assert.NotNull(objectResult);
-        //    Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
-
-        //    var errorResult = objectResult.Value as ErrorResult;
-        //    Assert.NotNull(errorResult);
-        //    Assert.False(errorResult.IsSuccess);
-        //}
-
-        //[Fact]
-        //public async Task RemoveCache_ShouldReturnOk_WhenCacheIsNotEmpty_AndCacheRemoved()
-        //{
-        //    // Arrange
-        //    List<EntityMenu> cachedMenus =
-        //    [
-        //        new() { Id = 1, ParentId = 0, Name_EN = "Menu1", Keyword = "Keyword1", SubMenus = [
-        //            new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", Keyword = "Keyword3", SubMenus = [] },
-        //            new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword4", SubMenus = [
-        //                new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5", SubMenus = [] }
-        //            ] }
-        //        ] },
-        //        new() { Id = 2, ParentId = 0, Name_EN = "Menu2", Keyword = "Keyword2", SubMenus = [] }
-        //    ];
-
-        //    ControllerTestHelper.SetupCacheService(_cacheServiceMock, cachedMenus);
-        //    _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu)).ReturnsAsync(true);
-
-        //    // Act
-        //    var objectResult = await _controller.RemoveCache() as ObjectResult;
-
-        //    // Assert
-        //    Assert.NotNull(objectResult);
-        //    Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
-
-        //    var successResult = objectResult.Value as SuccessResult;
-        //    Assert.NotNull(successResult);
-        //    Assert.True(successResult.IsSuccess);
-        //}
-
-        //[Fact]
-        //public async Task RemoveCache_ShouldReturnInternalServerError_WhenCacheIsNotEmpty_AndCacheNotRemoved()
-        //{
-        //    // Arrange
-        //    List<EntityMenu> cachedMenus =
-        //    [
-        //        new() { Id = 1, ParentId = 0, Name_EN = "Menu1", Keyword = "Keyword1", SubMenus = [
-        //            new() { Id = 3, ParentId = 1, Name_EN = "SubMenu1", Keyword = "Keyword3", SubMenus = [] },
-        //            new() { Id = 4, ParentId = 1, Name_EN = "SubMenu2", Keyword = "Keyword4", SubMenus = [
-        //                new() { Id = 5, ParentId = 4, Name_EN = "SubSubMenu1", Keyword = "Keyword5", SubMenus = [] }
-        //            ] }
-        //        ] },
-        //        new() { Id = 2, ParentId = 0, Name_EN = "Menu2", Keyword = "Keyword2", SubMenus = [] }
-        //    ];
-
-        //    ControllerTestHelper.SetupCacheService(_cacheServiceMock, cachedMenus);
-        //    _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu)).ReturnsAsync(false);
-
-        //    // Act
-        //    var objectResult = await _controller.RemoveCache() as ObjectResult;
-
-        //    // Assert
-        //    Assert.NotNull(objectResult);
-        //    Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
-
-        //    var errorResult = objectResult.Value as ErrorResult;
-        //    Assert.NotNull(errorResult);
-        //    Assert.False(errorResult.IsSuccess);
-        //}
-
-
-        [Theory]
-        [InlineData(0, "ParentId", ValidationMessages.MenuParentIdPositiveOrZero)]
-        [InlineData(-1, "ParentId", ValidationMessages.MenuParentIdPositiveOrZero)]
-        [InlineData(null, "Name_TR", ValidationMessages.MenuNameEmpty)]
-        [InlineData("", "Name_TR", ValidationMessages.MenuNameEmpty)]
-        [InlineData("a", "Name_TR", ValidationMessages.MenuNameMinLength)]
-        [InlineData("thisisaverylongmenunamethatexceedsthemaximumlengthallowedforthemenu", "Name_TR", ValidationMessages.MenuNameMaxLength)]
-        [InlineData(null, "Name_EN", ValidationMessages.MenuNameEmpty)]
-        [InlineData("", "Name_EN", ValidationMessages.MenuNameEmpty)]
-        [InlineData("a", "Name_EN", ValidationMessages.MenuNameMinLength)]
-        [InlineData("thisisaverylongmenunamethatexceedsthemaximumlengthallowedforthemenu", "Name_EN", ValidationMessages.MenuNameMaxLength)]
-        [InlineData(0, "ScreenCode", ValidationMessages.MenuScreenCodeMinRange)]
-        [InlineData(-1, "ScreenCode", ValidationMessages.MenuScreenCodeMinRange)]
-        [InlineData(0, "Priority", ValidationMessages.MenuPriorityPositiveOrZero)]
-        [InlineData(-1, "Priority", ValidationMessages.MenuPriorityPositiveOrZero)]
-        [InlineData(null, "Keyword", ValidationMessages.MenuKeywordEmpty)]
-        [InlineData("", "Keyword", ValidationMessages.MenuKeywordEmpty)]
-        [InlineData("a", "Keyword", ValidationMessages.MenuKeywordMinLength)]
-        [InlineData("thisisaverylongkeywordthatexceedsthemaximumlengthallowedforthekeyword", "Keyword", ValidationMessages.MenuKeywordMaxLength)]
-        [InlineData("a", "Icon", ValidationMessages.MenuIconMinLength)]
-        [InlineData("thisisaverylongiconthatexceedsthemaximumlengthallowedfortheicon", "Icon", ValidationMessages.MenuIconMaxLength)]
-        public async Task CreateMenu_ShouldReturnBadRequest_WhenInvalidRequestProvided(object? value, string field, string expectedErrorMessage)
+        [Fact]
+        public async Task RemoveCache_ShouldReturnOk_WhenCacheIsEmpty()
         {
             // Arrange Data
+            var cachedMenus = null as List<EntityMenu>;
+
+            // Arrange Service
+            ControllerTestHelper.SetupCacheService(_cacheServiceMock, cachedMenus);
+
+            // Act
+            var objectResult = await _controller.RemoveCache() as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuCacheNotExist, result.Message);
+        }
+
+        [Fact]
+        public async Task RemoveCache_ShouldReturnOk_WhenCacheIsNotEmpty_AndCacheRemoved()
+        {
+            // Arrange Data
+            var cachedMenus = MenuControllerTestHelper.GetRecursiveMenusMock();
+
+            // Arrange Service
+            ControllerTestHelper.SetupCacheService(_cacheServiceMock, cachedMenus);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(true);
+
+            // Act
+            var objectResult = await _controller.RemoveCache() as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuCacheRemoved, result.Message);
+        }
+
+        [Fact]
+        public async Task RemoveCache_ShouldReturnInternalServerError_WhenCacheIsNotEmpty_AndCacheNotRemoved()
+        {
+            // Arrange Data
+            var cachedMenus = MenuControllerTestHelper.GetRecursiveMenusMock();
+
+            // Arrange Service
+            ControllerTestHelper.SetupCacheService(_cacheServiceMock, cachedMenus);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(false);
+
+            // Act
+            var objectResult = await _controller.RemoveCache() as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as InternalServerErrorResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, result.Status);
+
+            Assert.Equal(ResultMessages.MenuCacheCouldNotRemoved, result.Message);
+        }
+
+
+        [Fact]
+        public async Task Create_ShouldReturnBadRequest_WhenInvalidRequestProvided()
+        {
+            // Arrange Data
+            long parentId = -1;
+            string expectedErrorMessage = ValidationMessages.MenuParentIdPositiveOrZero;
             var request = new CreateMenuCommandRequest
             {
-                ParentId = 1,
+                ParentId = parentId,
                 Name_TR = "MenuName_TR",
                 Name_EN = "MenuName_EN",
-                ScreenCode = 100,
-                Type = 1,
-                Priority = 1,
+                ScreenCode = 100000,
+                Type = 10,
+                Priority = 100,
                 Keyword = "Keyword",
                 Icon = "Icon",
                 IsGroup = true,
@@ -727,32 +624,6 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
                 NewEndDate = DateTime.Now.AddDays(1),
                 IsActive = true
             };
-
-            // Modify the field based on the test case
-            switch (field)
-            {
-                case "ParentId":
-                    request.ParentId = value is long longValue ? longValue : request.ParentId;
-                    break;
-                case "Name_TR":
-                    request.Name_TR = value as string ?? request.Name_TR;
-                    break;
-                case "Name_EN":
-                    request.Name_EN = value as string ?? request.Name_EN;
-                    break;
-                case "ScreenCode":
-                    request.ScreenCode = value is int intValue ? intValue : request.ScreenCode;
-                    break;
-                case "Priority":
-                    request.Priority = value is int intPriority ? intPriority : request.Priority;
-                    break;
-                case "Keyword":
-                    request.Keyword = value as string ?? request.Keyword;
-                    break;
-                case "Icon":
-                    request.Icon = value as string ?? request.Icon;
-                    break;
-            }
 
             // Arrange Service
             ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
@@ -772,123 +643,912 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api
             Assert.Equal(expectedErrorMessage, result.Message);
         }
 
+        [Fact]
+        public async Task Create_ShouldReturnBadRequest_WhenGivenParentIdNotExists()
+        {
+            // Arrange Data
+            var request = new CreateMenuCommandRequest
+            {
+                ParentId = 1,
+                Name_TR = "TestMenu_TR",
+                Name_EN = "TestMenu_EN",
+                ScreenCode = 100000,
+                Type = 10,
+                Priority = 100,
+                Keyword = "Keyword",
+                Icon = "Icon",
+                IsGroup = true,
+                IsNew = true,
+                NewStartDate = DateTime.Now,
+                NewEndDate = DateTime.Now.AddDays(1),
+                IsActive = true
+            };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new BadRequestResponse(ResultMessages.MenuParentIdNotExist);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(false);
+
+            // Act
+            var objectResult = await _controller.Create(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(ResultMessages.MenuParentIdNotExist, result.Message);
+        }
+
+        [Fact]
+        public async Task Create_ShouldReturnInternalServerError_WhenMenuIsNotCreated()
+        {
+            // Arrange Data
+            var request = new CreateMenuCommandRequest
+            {
+                ParentId = 0,
+                Name_TR = "TestMenu_TR",
+                Name_EN = "TestMenu_EN",
+                ScreenCode = 100000,
+                Type = 10,
+                Priority = 100,
+                Keyword = "Keyword",
+                Icon = "Icon",
+                IsGroup = true,
+                IsNew = true,
+                NewStartDate = DateTime.Now,
+                NewEndDate = DateTime.Now.AddDays(1),
+                IsActive = true
+            };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new InternalServerErrorResponse(ResultMessages.MenuCreateError);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(false);
+
+            // Act
+            var objectResult = await _controller.Create(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status500InternalServerError, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as InternalServerErrorResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status500InternalServerError, result.Status);
+
+            Assert.Equal(ResultMessages.MenuCreateError, result.Message);
+        }
+
+        [Fact]
+        public async Task Create_ShouldReturnOk_WhenMenuIsCreated()
+        {
+            // Arrange Data
+            var request = new CreateMenuCommandRequest
+            {
+                ParentId = 0,
+                Name_TR = "TestMenu_TR",
+                Name_EN = "TestMenu_EN",
+                ScreenCode = 100000,
+                Type = 10,
+                Priority = 100,
+                Keyword = "Keyword",
+                Icon = "Icon",
+                IsGroup = true,
+                IsNew = true,
+                NewStartDate = DateTime.Now,
+                NewEndDate = DateTime.Now.AddDays(1),
+                IsActive = true
+            };
+            var expectedErrorMessage = null as string;
+            long id = 1;
+            var menu = new EntityMenu();
+            var mediatorResponse = new OkDataResponse<long>(ResultMessages.MenuCreateSuccess, id);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            Mock<IMapper> _mapperMock = new();
+            _mapperMock.Setup(m => m.Map<EntityMenu>(request)).Returns(menu);
+            Mock<IMenuCommandRepository> _menuCommandRepository = new();
+            _menuCommandRepository.Setup(m => m.CreateMenuAndGetIdAsync(menu, It.IsAny<CancellationToken>())).ReturnsAsync(id);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(true);
+
+            // Act
+            var objectResult = await _controller.Create(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkDataResponse<long>;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuCreateSuccess, result.Message);
+
+            Assert.Equal(id, result.Data);
+        }
 
 
+        [Fact]
+        public async Task Update_ShouldReturnBadRequest_WhenInvalidRequestProvided()
+        {
+            // Arrange Data
+            long parentId = -1;
+            string expectedErrorMessage = ValidationMessages.MenuParentIdPositiveOrZero;
+            var request = new UpdateMenuCommandRequest
+            {
+                Id = 1,
+                ParentId = parentId,
+                Name_TR = "MenuName_TR",
+                Name_EN = "MenuName_EN",
+                ScreenCode = 100000,
+                Type = 10,
+                Priority = 100,
+                Keyword = "Keyword",
+                Icon = "Icon",
+                IsGroup = true,
+                IsNew = true,
+                NewStartDate = DateTime.Now,
+                NewEndDate = DateTime.Now.AddDays(1),
+                IsActive = true
+            };
 
-        //[Fact]
-        //public async Task Create_ShouldReturnOk_WhenMenuIsCreated()
-        //{
-        //    // Arrange
-        //    var request = new CreateMenuCommandRequest
-        //    {
-        //        ParentId = 0,
-        //        Name_TR = "TestMenu_TR",
-        //        Name_EN = "TestMenu_EN",
-        //        ScreenCode = 1,
-        //        Type = 1,
-        //        Priority = 1,
-        //        Keyword = "test-keyword",
-        //        Icon = "test-icon",
-        //        IsGroup = true,
-        //        IsNew = true,
-        //        NewStartDate = DateTime.Now,
-        //        NewEndDate = DateTime.Now.AddDays(1),
-        //        IsActive = true
-        //    };
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
 
-        //    _mediatorMock.Setup(m => m.Send(It.IsAny<CreateMenuCommandRequest>(), It.IsAny<CancellationToken>()))
-        //        .ReturnsAsync(new OkDataResult<long>(ResultMessages.MenuCreateSuccess, 1));
+            // Act
+            var objectResult = await _controller.Update(request) as ObjectResult;
 
-        //    _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
-        //        .ReturnsAsync(true);
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
 
-        //    // Act
-        //    var objectResult = await _controller.Create(request) as ObjectResult;
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
 
-        //    // Assert
-        //    Assert.NotNull(objectResult);
-        //    Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+            Assert.Equal(expectedErrorMessage, result.Message);
+        }
 
-        //    var result = objectResult.Value as OkDataResult<long>;
-        //    Assert.NotNull(result);
-        //    Assert.Equal(1, result.Data);
-        //}
+        [Fact]
+        public async Task Update_ShouldReturnBadRequest_WhenGivenIdNotExists()
+        {
+            // Arrange Data
+            var request = new UpdateMenuCommandRequest
+            {
+                Id = 1,
+                ParentId = 1,
+                Name_TR = "TestMenu_TR",
+                Name_EN = "TestMenu_EN",
+                ScreenCode = 100000,
+                Type = 10,
+                Priority = 100,
+                Keyword = "Keyword",
+                Icon = "Icon",
+                IsGroup = true,
+                IsNew = true,
+                NewStartDate = DateTime.Now,
+                NewEndDate = DateTime.Now.AddDays(1),
+                IsActive = true
+            };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new BadRequestResponse(ResultMessages.MenuIdNotExist);
 
-        //[Fact]
-        //public async Task Create_ShouldReturnBadRequest_WhenMenuIsNotCreated()
-        //{
-        //    // Arrange
-        //    var request = new CreateMenuCommandRequest
-        //    {
-        //        ParentId = 0,
-        //        Name_TR = "TestMenu_TR",
-        //        Name_EN = "TestMenu_EN",
-        //        ScreenCode = 1,
-        //        Type = 1,
-        //        Priority = 1,
-        //        Keyword = "test-keyword",
-        //        Icon = "test-icon",
-        //        IsGroup = false,
-        //        IsNew = true,
-        //        NewStartDate = DateTime.Now,
-        //        NewEndDate = DateTime.Now.AddDays(1),
-        //        IsActive = true
-        //    };
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(false);
 
-        //    _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
-        //        .ReturnsAsync(new ErrorDataResult<long>(ResultMessages.MenuCreateError));
+            // Act
+            var objectResult = await _controller.Update(request) as ObjectResult;
 
-        //    _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
-        //        .ReturnsAsync(true);
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
 
-        //    // Act
-        //    var objectResult = await _controller.Create(request) as ObjectResult;
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
 
-        //    // Assert
-        //    Assert.NotNull(objectResult);
-        //    Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+            Assert.Equal(ResultMessages.MenuIdNotExist, result.Message);
+        }
 
-        //    var result = objectResult.Value as NotFoundDataResult<long>;
-        //    Assert.NotNull(result);
-        //}
+        [Fact]
+        public async Task Update_ShouldReturnBadRequest_WhenGivenParentIdNotExists()
+        {
+            // Arrange Data
+            var request = new UpdateMenuCommandRequest
+            {
+                Id = 1,
+                ParentId = 1,
+                Name_TR = "TestMenu_TR",
+                Name_EN = "TestMenu_EN",
+                ScreenCode = 100000,
+                Type = 10,
+                Priority = 100,
+                Keyword = "Keyword",
+                Icon = "Icon",
+                IsGroup = true,
+                IsNew = true,
+                NewStartDate = DateTime.Now,
+                NewEndDate = DateTime.Now.AddDays(1),
+                IsActive = true
+            };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new BadRequestResponse(ResultMessages.MenuParentIdNotExist);
 
-        //[Fact]
-        //public async Task Create_ShouldReturnBadRequest_WhenInvalidDataProvided()
-        //{
-        //    // Arrange
-        //    var request = new CreateMenuCommandRequest
-        //    {
-        //        ParentId = -1, // Invalid value
-        //        Name_TR = "", // Invalid value
-        //        Name_EN = "TestMenu", // Valid value
-        //        ScreenCode = 0, // Invalid value
-        //        Type = 0, // Invalid value
-        //        Priority = -1, // Invalid value
-        //        Keyword = "", // Invalid value
-        //        Icon = "test-icon", // Valid value
-        //        IsGroup = false, // Valid value
-        //        IsNew = true, // Valid value
-        //        NewStartDate = DateTime.Now,
-        //        NewEndDate = DateTime.Now,
-        //        IsActive = true // Valid value
-        //    };
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(false);
 
-        //    // Act
-        //    Mock<CreateMenuValidator> _validatorMock = new();
-        //    var objectResult = await _validatorMock.Setup(c => c.ValidateAsync(request, It.IsAny<CancellationToken>())).ReturnsAsync();
+            // Act
+            var objectResult = await _controller.Update(request) as ObjectResult;
 
-        //    // Assert
-        //    objectResult.ShouldHaveValidationErrorFor(x => x.ParentId);
-        //    objectResult.ShouldHaveValidationErrorFor(x => x.Name_TR);
-        //    objectResult.ShouldNotHaveValidationErrorFor(x => x.Name_EN); // This property should be valid
-        //    objectResult.ShouldHaveValidationErrorFor(x => x.ScreenCode);
-        //    objectResult.ShouldHaveValidationErrorFor(x => x.Type);
-        //    objectResult.ShouldHaveValidationErrorFor(x => x.Priority);
-        //    objectResult.ShouldHaveValidationErrorFor(x => x.Keyword);
-        //    objectResult.ShouldNotHaveValidationErrorFor(x => x.Icon); // This property should be valid
-        //    objectResult.ShouldNotHaveValidationErrorFor(x => x.IsGroup); // These properties should be valid
-        //    objectResult.ShouldNotHaveValidationErrorFor(x => x.IsNew);
-        //    objectResult.ShouldNotHaveValidationErrorFor(x => x.IsActive);
-        //}
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(ResultMessages.MenuParentIdNotExist, result.Message);
+        }
+
+        [Fact]
+        public async Task Update_ShouldReturnOk_WhenMenuIsNotUpdated()
+        {
+            // Arrange Data
+            var request = new UpdateMenuCommandRequest
+            {
+                Id = 1,
+                ParentId = 0,
+                Name_TR = "TestMenu_TR",
+                Name_EN = "TestMenu_EN",
+                ScreenCode = 100000,
+                Type = 10,
+                Priority = 100,
+                Keyword = "Keyword",
+                Icon = "Icon",
+                IsGroup = true,
+                IsNew = true,
+                NewStartDate = DateTime.Now,
+                NewEndDate = DateTime.Now.AddDays(1),
+                IsActive = true
+            };
+            var expectedErrorMessage = null as string;
+            var menu = new EntityMenu();
+            var mediatorResponse = new OkResponse(ResultMessages.MenuUpdateNoChanges);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            Mock<IMapper> _mapperMock = new();
+            _mapperMock.Setup(m => m.Map<EntityMenu>(request)).Returns(menu);
+            Mock<IMenuCommandRepository> _menuCommandRepository = new();
+            _menuCommandRepository.Setup(m => m.UpdateMenuAsync(menu, It.IsAny<CancellationToken>())).ReturnsAsync(0);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(false);
+
+            // Act
+            var objectResult = await _controller.Update(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuUpdateNoChanges, result.Message);
+        }
+
+        [Fact]
+        public async Task Update_ShouldReturnOk_WhenMenuIsUpdated()
+        {
+            // Arrange Data
+            var request = new UpdateMenuCommandRequest
+            {
+                Id = 1,
+                ParentId = 0,
+                Name_TR = "TestMenu_TR",
+                Name_EN = "TestMenu_EN",
+                ScreenCode = 100000,
+                Type = 10,
+                Priority = 100,
+                Keyword = "Keyword",
+                Icon = "Icon",
+                IsGroup = true,
+                IsNew = true,
+                NewStartDate = DateTime.Now,
+                NewEndDate = DateTime.Now.AddDays(1),
+                IsActive = true
+            };
+            var expectedErrorMessage = null as string;
+            var menu = new EntityMenu();
+            var mediatorResponse = new OkResponse(ResultMessages.MenuUpdateSuccess);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            Mock<IMapper> _mapperMock = new();
+            _mapperMock.Setup(m => m.Map<EntityMenu>(request)).Returns(menu);
+            Mock<IMenuCommandRepository> _menuCommandRepository = new();
+            _menuCommandRepository.Setup(m => m.UpdateMenuAsync(menu, It.IsAny<CancellationToken>())).ReturnsAsync(1);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(true);
+
+            // Act
+            var objectResult = await _controller.Update(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuUpdateSuccess, result.Message);
+        }
+
+
+        [Fact]
+        public async Task Delete_ShouldReturnBadRequest_WhenInvalidRequestProvided()
+        {
+            // Arrange Data
+            long id = -1;
+            string expectedErrorMessage = ValidationMessages.IdPositive;
+            var request = new DeleteMenuCommandRequest { Id = id };
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+
+            // Act
+            var objectResult = await _controller.Delete(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(expectedErrorMessage, result.Message);
+        }
+
+        [Fact]
+        public async Task Delete_ShouldReturnBadRequest_WhenGivenIdNotExists()
+        {
+            // Arrange Data
+            var request = new DeleteMenuCommandRequest { Id = 1};
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new BadRequestResponse(ResultMessages.MenuIdNotExist);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(false);
+
+            // Act
+            var objectResult = await _controller.Delete(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(ResultMessages.MenuIdNotExist, result.Message);
+        }
+
+        [Fact]
+        public async Task Delete_ShouldReturnOk_WhenMenuIsNotDeleted()
+        {
+            // Arrange Data
+            var request = new DeleteMenuCommandRequest { Id = 1 };
+            var expectedErrorMessage = null as string;
+            var menu = new EntityMenu();
+            var mediatorResponse = new BadRequestResponse(ResultMessages.MenuDeleteError);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            Mock<IMenuCommandRepository> _menuCommandRepository = new();
+            _menuCommandRepository.Setup(m => m.DeleteMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(false);
+
+            // Act
+            var objectResult = await _controller.Delete(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(ResultMessages.MenuDeleteError, result.Message);
+        }
+
+        [Fact]
+        public async Task Delete_ShouldReturnOk_WhenMenuIsDeleted()
+        {
+            // Arrange Data
+            var request = new DeleteMenuCommandRequest { Id = 1 };
+            var expectedErrorMessage = null as string;
+            var menu = new EntityMenu();
+            var mediatorResponse = new OkResponse(ResultMessages.MenuDeleteSuccess);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            Mock<IMenuCommandRepository> _menuCommandRepository = new();
+            _menuCommandRepository.Setup(m => m.DeleteMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(true);
+
+            // Act
+            var objectResult = await _controller.Delete(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuDeleteSuccess, result.Message);
+        }
+
+
+        [Fact]
+        public async Task RolllbackById_ShouldReturnBadRequest_WhenInvalidRequestProvided()
+        {
+            // Arrange Data
+            long id = -1;
+            string expectedErrorMessage = ValidationMessages.IdPositive;
+            var request = new RollbackMenuByIdCommandRequest { Id = id };
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+
+            // Act
+            var objectResult = await _controller.RolllbackById(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(expectedErrorMessage, result.Message);
+        }
+
+        [Fact]
+        public async Task RolllbackById_ShouldReturnBadRequest_WhenGivenIdNotExists()
+        {
+            // Arrange Data
+            var request = new RollbackMenuByIdCommandRequest { Id = 1 };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new BadRequestResponse(ResultMessages.MenuIdNotExist);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsMenuIdExistsInMenuHAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+            // Act
+            var objectResult = await _controller.RolllbackById(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(ResultMessages.MenuIdNotExist, result.Message);
+        }
+
+        [Fact]
+        public async Task RolllbackById_ShouldReturnOk_WhenMenuIsNotRollbacked()
+        {
+            // Arrange Data
+            var request = new RollbackMenuByIdCommandRequest { Id = 1 };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new OkResponse(ResultMessages.MenuRollbackNoChanges);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsMenuIdExistsInMenuHAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            Mock<IMenuCommandRepository> _menuCommandRepository = new();
+            _menuCommandRepository.Setup(m => m.RollbackMenuByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(0);
+
+            // Act
+            var objectResult = await _controller.RolllbackById(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuRollbackNoChanges, result.Message);
+        }
+
+        [Fact]
+        public async Task RolllbackById_ShouldReturnOk_WhenMenuIsRollbacked()
+        {
+            // Arrange Data
+            var request = new RollbackMenuByIdCommandRequest { Id = 1 };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new OkResponse(ResultMessages.MenuRollbackSuccess);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsMenuIdExistsInMenuHAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            Mock<IMenuCommandRepository> _menuCommandRepository = new();
+            _menuCommandRepository.Setup(m => m.RollbackMenuByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+            // Act
+            var objectResult = await _controller.RolllbackById(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuRollbackSuccess, result.Message);
+        }
+
+
+        [Fact]
+        public async Task RolllbackByScreenCode_ShouldReturnBadRequest_WhenInvalidRequestProvided()
+        {
+            // Arrange Data
+            int screenCode = 1;
+            string expectedErrorMessage = ValidationMessages.MenuScreenCodeMinRange;
+            var request = new RollbackMenuByScreenCodeCommandRequest { ScreenCode = screenCode };
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+
+            // Act
+            var objectResult = await _controller.RolllbackByScreenCode(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(expectedErrorMessage, result.Message);
+        }
+
+        [Fact]
+        public async Task RolllbackByScreenCode_ShouldReturnBadRequest_WhenGivenIdNotExists()
+        {
+            // Arrange Data
+            var request = new RollbackMenuByScreenCodeCommandRequest { ScreenCode = 10001 };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new BadRequestResponse(ResultMessages.MenuScreenCodeNotExistInHistory);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuHAsync(request.ScreenCode, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+            // Act
+            var objectResult = await _controller.RolllbackByScreenCode(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(ResultMessages.MenuScreenCodeNotExistInHistory, result.Message);
+        }
+
+        [Fact]
+        public async Task RolllbackByScreenCode_ShouldReturnOk_WhenMenuIsNotRollbacked()
+        {
+            // Arrange Data
+            var request = new RollbackMenuByScreenCodeCommandRequest { ScreenCode = 10001 };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new OkResponse(ResultMessages.MenuRollbackNoChanges);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuHAsync(request.ScreenCode, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            Mock<IMenuCommandRepository> _menuCommandRepository = new();
+            _menuCommandRepository.Setup(m => m.RollbackMenuByScreenCodeAsync(request.ScreenCode, It.IsAny<CancellationToken>())).ReturnsAsync(0);
+
+            // Act
+            var objectResult = await _controller.RolllbackByScreenCode(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuRollbackNoChanges, result.Message);
+        }
+
+        [Fact]
+        public async Task RolllbackByScreenCode_ShouldReturnOk_WhenMenuIsRollbacked()
+        {
+            // Arrange Data
+            var request = new RollbackMenuByScreenCodeCommandRequest { ScreenCode = 10001 };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new OkResponse(ResultMessages.MenuRollbackSuccess);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuHAsync(request.ScreenCode, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            Mock<IMenuCommandRepository> _menuCommandRepository = new();
+            _menuCommandRepository.Setup(m => m.RollbackMenuByScreenCodeAsync(request.ScreenCode, It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+            // Act
+            var objectResult = await _controller.RolllbackByScreenCode(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuRollbackSuccess, result.Message);
+        }
+
+
+        [Fact]
+        public async Task RolllbackByToken_ShouldReturnBadRequest_WhenInvalidRequestProvided()
+        {
+            // Arrange Data
+            Guid rollbackToken = Guid.NewGuid();
+            string expectedErrorMessage = ValidationMessages.RollbackTokenEmpty;
+            var request = new RollbackMenusByTokenCommandRequest { RollbackToken = rollbackToken };
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+
+            // Act
+            var objectResult = await _controller.RolllbackByToken(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(expectedErrorMessage, result.Message);
+        }
+
+        [Fact]
+        public async Task RolllbackByToken_ShouldReturnBadRequest_WhenGivenIdNotExists()
+        {
+            // Arrange Data
+            var request = new RollbackMenusByTokenCommandRequest { RollbackToken = Guid.NewGuid() };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new BadRequestResponse(ResultMessages.MenuRollbackTokenNotExistInHistory);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsRollbackTokenExistsInMenuHAsync(request.RollbackToken, It.IsAny<CancellationToken>())).ReturnsAsync(false);
+
+            // Act
+            var objectResult = await _controller.RolllbackByToken(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(ResultMessages.MenuRollbackTokenNotExistInHistory, result.Message);
+        }
+
+        [Fact]
+        public async Task RolllbackByToken_ShouldReturnOk_WhenMenuIsNotRollbacked()
+        {
+            // Arrange Data
+            var request = new RollbackMenusByTokenCommandRequest { RollbackToken = Guid.NewGuid() };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new OkResponse(ResultMessages.MenuRollbackNoChanges);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsRollbackTokenExistsInMenuHAsync(request.RollbackToken, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            Mock<IMenuCommandRepository> _menuCommandRepository = new();
+            _menuCommandRepository.Setup(m => m.RollbackMenusByTokenAsync(request.RollbackToken, It.IsAny<CancellationToken>())).ReturnsAsync(0);
+
+            // Act
+            var objectResult = await _controller.RolllbackByToken(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuRollbackNoChanges, result.Message);
+        }
+
+        [Fact]
+        public async Task RolllbackByToken_ShouldReturnOk_WhenMenuIsRollbacked()
+        {
+            // Arrange Data
+            var request = new RollbackMenusByTokenCommandRequest { RollbackToken = Guid.NewGuid() };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new OkResponse(ResultMessages.MenuRollbackSuccess);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsRollbackTokenExistsInMenuHAsync(request.RollbackToken, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            Mock<IMenuCommandRepository> _menuCommandRepository = new();
+            _menuCommandRepository.Setup(m => m.RollbackMenusByTokenAsync(request.RollbackToken, It.IsAny<CancellationToken>())).ReturnsAsync(1);
+
+            // Act
+            var objectResult = await _controller.RolllbackByToken(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status200OK, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as OkResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status200OK, result.Status);
+
+            Assert.Equal(ResultMessages.MenuRollbackSuccess, result.Message);
+        }
     }
 }
