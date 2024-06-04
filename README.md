@@ -8,60 +8,83 @@ The project follows the Onion Architecture pattern, organizing code into layers 
 
 ### Onion Architecture Overview
 - Core
-  - Domain
   - Application
     - Dependencies:
-      - Project References:
+      - Projects:
         - Domain
-      - NuGet Packages:
+      - Packages:
         - AutoMapper
         - FluentValidation
         - FluentValidation.DependencyInjectionExtensions
         - MediatR
         - Microsoft.Data.SqlClient
-        - Microsoft.Extensions.Configuration
+        - Microsoft.Extensions.DependencyInjection.Abstractions
+  - Domain
 - Infrastructure
   - Infrastructure
     - Dependencies:
-      - Project References:
+      - Projects:
+        - Application
         - Domain
-      - NuGet Packages:
-        - Newtonsoft.Json
-        - Microsoft.Extensions.Logging
+      - Packages:
         - Microsoft.Extensions.DependencyInjection.Abstractions
         - Microsoft.Extensions.Caching.Memory
         - Microsoft.Extensions.Caching.Abstractions
-        - StackExchange.Redis
         - Microsoft.Extensions.Configuration
+        - Microsoft.Extensions.Logging
+        - Serilog
+        - Serilog.Sinks.File
+        - StackExchange.Redis
+        - Newtonsoft.Json
   - Persistence
     - Dependencies:
-      - Project References:
-        - Domain
+      - Projects:
         - Application
-      - NuGet Packages:
+        - Domain
+        - Infrastructure
+      - Packages:
         - Dapper
         - Microsoft.Data.SqlClient
         - Microsoft.Extensions.Configuration
 - Presentation
-  - Web Api
+  - Api
     - Dependencies:
-      - Project References:
-        - Domain
+      - Projects:
         - Application
+        - Domain
         - Infrastructure
         - Persistence
-      - NuGet Packages:
-        - MediatR
-        - Microsoft.Extensions.DependencyInjection
+      - Packages:
+        - Asp.Versioning.Mvc
+        - Asp.Versioning.Mvc.ApiExplorer
         - Swashbuckle.AspNetCore
-
+        - Microsoft.Extensions.DependencyInjection
+        - MediatR
+        - Serilog.AspNetCore
+        - Serilog.Sinks.File
+- Test
+  - UnitTests.xUnit
+    - Dependencies:
+      - Projects:
+        - Application
+        - Domain
+        - Infrastructure
+        - Persistence
+       - Packages:
+         - AutoMapper
+         - FluentAssertions
+         - MediatR
+         - Microsoft.NET.Test.Sdk
+         - Moq
+         - xunit
+         - xunit.runner.visualstudio
 ---
 
 ### Application
-The Application layer is responsible for the application's commands and queries, handlers using the `CQRS Pattern` and `MediatR pattern`, and validators using `FluentValidation`. It also includes interfaces for `Dapper` and repositories, and `AutoMapper` for mapping command requests with entities.
+The Application Layer serves as the intermediary between the Presentation Layer and the Core Domain in the Onion Architecture. It encapsulates the application-specific logic, including the handling of commands and queries following the `CQRS Pattern` and `MediatR pattern`, as well as the validation of inputs using `FluentValidation`. Additionally, it provides interfaces for data access using `Dapper`, repositories and infrastructure services, and facilitates object-to-object mapping through the use of `AutoMapper`.
 
 ### Domain
-The Domain layer contains the entities, constants, and result classes.
+The domain layer, also known as the business layer, is a central part of the application architecture that encapsulates the core business logic and rules. It defines the fundamental concepts, behaviors, and entities that model the business domain. The domain layer typically includes entities, which represent the essential business objects and their relationships; constants, which define immutable values relevant to the domain; and response classes, which encapsulate the results or outcomes of domain operations.
 
 ### Infrastructure
 The Infrastructure layer contains the necessary infrastructure for the application, including services for logging with `Serilog`, serialization with `Newtonsoft.Json` and caching using either `Microsoft.Extensions.Caching.Memory` or `StackExchange.Redis`. The `Redis server` is configured to run on a WSL2 Ubuntu distribution at port 6379.
@@ -72,6 +95,9 @@ The Persistence layer manages the database connection and database methods. It u
 ### Api
 The API layer handles requests using `MediatR` and utilizes caching with `StackExchange.Redis`.
 
+### UnitTests.xUnit
+The unit test layer, utilizing `xUnit`, `FluentAssertions`, and `Moq`, comprehensively covers all scenarios within the controller methods.
+
 ---
 
 ## Technologies Used
@@ -81,8 +107,12 @@ The API layer handles requests using `MediatR` and utilizes caching with `StackE
 * FluentValidation
 * AutoMapper
 * Dapper ORM, Microsoft SQL Server, Stored Procedures and Triggers
-* MemoryCache, Redis, Logger, JsonConvert
-* ASP.NET Core Web API
+* MemoryCache, Redis
+* Serilog
+* Newtonsoft.Json
+* ASP.NET Core Web API with versioning system
+* Unit Tests
+* Git
 
 ---
 
@@ -93,6 +123,16 @@ Implements the CQRS pattern, separating the responsibilities of commands (write 
 
 ## MediatR Pattern
 Utilizes the MediatR library for implementing the Mediator pattern, simplifying the communication between components, promoting loose coupling, and reducing dependency injection.
+
+---
+
+## FluentValidation
+Separate the validation logic from the business logic and integrate it into the application layer. This allows to define reusable validator classes.
+
+---
+
+## AutoMapper
+Query requests or command requests are often validated for correctness and sanitized for security before being used to create or update entities. Mapping provides an opportunity to perform these operations as part of the mapping process, ensuring that only valid and sanitized data is used to modify the entity state.
 
 ---
 
@@ -119,3 +159,8 @@ Implements logging using `Serilog` to provide a robust and flexible logging infr
 
 ## Serialization
 Uses `Newtonsoft.Json` for serialization and deserialization of objects to and from JSON, ensuring data is easily readable and transferrable.
+
+---
+
+## UnitTests
+Unit tests, employing `xUnit`, `FluentAssertions`, `Moq`, provide a structured approach, including data initialization (Arrange), action execution (Act), and outcome verification (Assert), facilitating the verification of code correctness, reliability, and maintainability, thereby enhancing code quality, expediting development cycles, and bolstering confidence in software stability.
