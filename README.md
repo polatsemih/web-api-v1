@@ -6,78 +6,6 @@ An ASP.NET Web API project that showcases the implementation of advanced archite
 ## Onion Architecture
 The project follows the Onion Architecture pattern, organizing code into layers based on their responsibilities, with clear separation of concerns and dependency inversion.
 
-### Onion Architecture Overview
-- Core
-  - Application
-    - Dependencies:
-      - Projects:
-        - Domain
-      - Packages:
-        - AutoMapper
-        - FluentValidation
-        - FluentValidation.DependencyInjectionExtensions
-        - MediatR
-        - Microsoft.Data.SqlClient
-        - Microsoft.Extensions.DependencyInjection.Abstractions
-  - Domain
-- Infrastructure
-  - Infrastructure
-    - Dependencies:
-      - Projects:
-        - Application
-        - Domain
-      - Packages:
-        - Microsoft.Extensions.DependencyInjection.Abstractions
-        - Microsoft.Extensions.Caching.Memory
-        - Microsoft.Extensions.Caching.Abstractions
-        - Microsoft.Extensions.Configuration
-        - Microsoft.Extensions.Logging
-        - Serilog
-        - Serilog.Sinks.File
-        - StackExchange.Redis
-        - Newtonsoft.Json
-  - Persistence
-    - Dependencies:
-      - Projects:
-        - Application
-        - Domain
-        - Infrastructure
-      - Packages:
-        - Dapper
-        - Microsoft.Data.SqlClient
-        - Microsoft.Extensions.Configuration
-- Presentation
-  - Api
-    - Dependencies:
-      - Projects:
-        - Application
-        - Domain
-        - Infrastructure
-        - Persistence
-      - Packages:
-        - Asp.Versioning.Mvc
-        - Asp.Versioning.Mvc.ApiExplorer
-        - Swashbuckle.AspNetCore
-        - Microsoft.Extensions.DependencyInjection
-        - MediatR
-        - Serilog.AspNetCore
-        - Serilog.Sinks.File
-- Test
-  - UnitTests.xUnit
-    - Dependencies:
-      - Projects:
-        - Application
-        - Domain
-        - Infrastructure
-        - Persistence
-       - Packages:
-         - AutoMapper
-         - FluentAssertions
-         - MediatR
-         - Microsoft.NET.Test.Sdk
-         - Moq
-         - xunit
-         - xunit.runner.visualstudio
 ---
 
 ### Application
@@ -164,3 +92,78 @@ Uses `Newtonsoft.Json` for serialization and deserialization of objects to and f
 
 ## UnitTests
 Unit tests, employing `xUnit`, `FluentAssertions`, `Moq`, provide a structured approach, including data initialization (Arrange), action execution (Act), and outcome verification (Assert), facilitating the verification of code correctness, reliability, and maintainability, thereby enhancing code quality, expediting development cycles, and bolstering confidence in software stability.
+
+---
+
+### Onion Architecture Overview
+- Core
+  - Application
+    - Dependencies:
+      - Projects:
+        - Domain
+      - Packages:
+        - AutoMapper
+        - FluentValidation
+        - FluentValidation.DependencyInjectionExtensions
+        - MediatR
+        - Microsoft.Data.SqlClient
+        - Microsoft.Extensions.DependencyInjection.Abstractions
+  - Domain
+- Infrastructure
+  - Infrastructure
+    - Dependencies:
+      - Projects:
+        - Application
+        - Domain
+      - Packages:
+        - Microsoft.Extensions.DependencyInjection.Abstractions
+        - Microsoft.Extensions.Caching.Memory
+        - Microsoft.Extensions.Caching.Abstractions
+        - Microsoft.Extensions.Configuration
+        - Microsoft.Extensions.Logging
+        - Serilog
+        - Serilog.Sinks.File
+        - StackExchange.Redis
+        - Newtonsoft.Json
+  - Persistence
+    - Dependencies:
+      - Projects:
+        - Application
+        - Domain
+        - Infrastructure
+      - Packages:
+        - Dapper
+        - Microsoft.Data.SqlClient
+        - Microsoft.Extensions.Configuration
+- Presentation
+  - Api
+    - Dependencies:
+      - Projects:
+        - Application
+        - Domain
+        - Infrastructure
+        - Persistence
+      - Packages:
+        - Asp.Versioning.Mvc
+        - Asp.Versioning.Mvc.ApiExplorer
+        - Swashbuckle.AspNetCore
+        - Microsoft.Extensions.DependencyInjection
+        - MediatR
+        - Serilog.AspNetCore
+        - Serilog.Sinks.File
+- Test
+  - UnitTests.xUnit
+    - Dependencies:
+      - Projects:
+        - Application
+        - Domain
+        - Infrastructure
+        - Persistence
+       - Packages:
+         - AutoMapper
+         - FluentAssertions
+         - MediatR
+         - Microsoft.NET.Test.Sdk
+         - Moq
+         - xunit
+         - xunit.runner.visualstudio
