@@ -95,6 +95,11 @@ Unit tests, employing `xUnit`, `FluentAssertions`, `Moq`, provide a structured a
 
 ---
 
+## Git
+Git, with its version control, collaboration, branching, merging, code review, auditing, backup, portability, and open-source ecosystem, enables efficient and reliable software development.
+
+---
+
 ### Onion Architecture Overview
 - Core
   - Application
