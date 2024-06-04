@@ -557,7 +557,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
 
             // Arrange Service
             ControllerTestHelper.SetupCacheService(_cacheServiceMock, cachedMenus);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(true);
 
             // Act
@@ -583,7 +583,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
 
             // Arrange Service
             ControllerTestHelper.SetupCacheService(_cacheServiceMock, cachedMenus);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(false);
 
             // Act
@@ -679,7 +679,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                          .ReturnsAsync(mediatorResponse);
             Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
             _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(false);
 
             // Act
@@ -731,7 +731,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
             Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
             _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
             _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuAsync(request.ScreenCode.Value, It.IsAny<CancellationToken>())).ReturnsAsync(true);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(false);
 
             // Act
@@ -783,7 +783,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
             Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
             _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
             _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuAsync(request.ScreenCode.Value, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(false);
 
             // Act
@@ -841,7 +841,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
             _mapperMock.Setup(m => m.Map<EntityMenu>(request)).Returns(menu);
             Mock<IMenuCommandRepository> _menuCommandRepository = new();
             _menuCommandRepository.Setup(m => m.CreateMenuAndGetIdAsync(menu, It.IsAny<CancellationToken>())).ReturnsAsync(id);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(true);
 
             // Act
@@ -941,7 +941,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                          .ReturnsAsync(mediatorResponse);
             Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
             _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(false);
 
             // Act
@@ -994,7 +994,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
             Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
             _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
             _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(false);
 
             // Act
@@ -1053,7 +1053,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
             _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
             _menuQueryRepositoryMock.Setup(m => m.GetMenuScreenCodeByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(menuWithScreenCode);
             _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuAsync(menuWithScreenCode.ScreenCode.Value, It.IsAny<CancellationToken>())).ReturnsAsync(true);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(false);
 
             // Act
@@ -1117,7 +1117,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
             _mapperMock.Setup(m => m.Map<EntityMenu>(request)).Returns(menu);
             Mock<IMenuCommandRepository> _menuCommandRepository = new();
             _menuCommandRepository.Setup(m => m.UpdateMenuAsync(menu, It.IsAny<CancellationToken>())).ReturnsAsync(0);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(false);
 
             // Act
@@ -1180,7 +1180,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
             _mapperMock.Setup(m => m.Map<EntityMenu>(request)).Returns(menu);
             Mock<IMenuCommandRepository> _menuCommandRepository = new();
             _menuCommandRepository.Setup(m => m.UpdateMenuAsync(menu, It.IsAny<CancellationToken>())).ReturnsAsync(1);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(true);
 
             // Act
@@ -1240,7 +1240,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                          .ReturnsAsync(mediatorResponse);
             Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
             _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(false);
 
             // Act
@@ -1276,7 +1276,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
             _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
             Mock<IMenuCommandRepository> _menuCommandRepository = new();
             _menuCommandRepository.Setup(m => m.DeleteMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(false);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(false);
 
             // Act
@@ -1312,7 +1312,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
             _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
             Mock<IMenuCommandRepository> _menuCommandRepository = new();
             _menuCommandRepository.Setup(m => m.DeleteMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
-            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
                              .ReturnsAsync(true);
 
             // Act

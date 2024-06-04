@@ -19,6 +19,11 @@ namespace SUPBank.Application.Features.Menu.Queries.Handlers
 
         public async Task<IResponse> Handle(GetMenuByIdQueryRequest request, CancellationToken cancellationToken)
         {
+            if (!await _menuQueryRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken))
+            {
+                return new BadRequestResponse(ResultMessages.MenuIdNotExist);
+            }
+
             var result = await _menuQueryRepository.GetMenuByIdAsync(request.Id, cancellationToken);
             if (result == null)
             {
