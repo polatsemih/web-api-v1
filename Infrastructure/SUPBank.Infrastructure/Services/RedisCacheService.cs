@@ -1,6 +1,7 @@
 ﻿using StackExchange.Redis;
 using SUPBank.Application.Interfaces.Services;
 using SUPBank.Domain.Contstants;
+using SUPBank.Domain.Entities;
 
 namespace SUPBank.Infrastructure.Services
 {
@@ -92,32 +93,42 @@ namespace SUPBank.Infrastructure.Services
         }
 
 
-        public bool RemoveCache(string key)
+        public bool RemoveCache<T>(string key)
         {
-            bool result = _database.KeyDelete(key);
-            if (result)
+            var cachedData = GetCache<T>(key);
+            if (cachedData != null)
             {
-                _logger.LogInformation(string.Format(Cache.CacheRemoveSuccess, key));
+                bool result = _database.KeyDelete(key);
+                if (result)
+                {
+                    _logger.LogInformation(string.Format(Cache.CacheRemoveSuccess, key));
+                }
+                else
+                {
+                    _logger.LogInformation(string.Format(Cache.CacheRemoveFail, key));
+                }
+                return result;
             }
-            else
-            {
-                _logger.LogInformation(string.Format(Cache.CacheRemoveFail, key));
-            }
-            return result;
+            return false;
         }
 
-        public async Task<bool> RemoveCacheAsync(string key)
+        public async Task<bool> RemoveCacheAsync<T>(string key)
         {
-            bool result = await _database.KeyDeleteAsync(key);
-            if (result)
+            var cachedData = GetCacheAsync<T>(key);
+            if (cachedData.Result != null)
             {
-                _logger.LogInformation(string.Format(Cache.CacheRemoveSuccess, key));
+                bool result = await _database.KeyDeleteAsync(key);
+                if (result)
+                {
+                    _logger.LogInformation(string.Format(Cache.CacheRemoveSuccess, key));
+                }
+                else
+                {
+                    _logger.LogInformation(string.Format(Cache.CacheRemoveFail, key));
+                }
+                return result;
             }
-            else
-            {
-                _logger.LogInformation(string.Format(Cache.CacheRemoveFail, key));
-            }
-            return result;
+            return false;
         }
     }
 }

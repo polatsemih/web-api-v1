@@ -7,7 +7,7 @@ namespace SUPBank.Application.Validations.Menu
     {
         public RollbackMenuByScreenCodeValidator()
         {
-            RuleFor(r => r.ScreenCode).ValidateMenuScreenCode();
+            RuleFor(r => r.ScreenCode).ValidateMenuScreenCodeRequired();
         }
     }
 }

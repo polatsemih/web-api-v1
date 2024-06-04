@@ -24,6 +24,15 @@ namespace SUPBank.Application.Features.Menu.Commands.Handlers
                 return new BadRequestResponse(ResultMessages.MenuIdNotExistInHistory);
             }
 
+            if (!await _menuQueryRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken))
+            {
+                var menuH = await _menuQueryRepository.GetMenuByIdInMenuHAsync(request.Id, cancellationToken);
+                if (menuH != null && menuH.ScreenCode.HasValue && await _menuQueryRepository.IsScreenCodeExistsInMenuAsync(menuH.ScreenCode.Value, cancellationToken))
+                {
+                    return new BadRequestResponse(ResultMessages.MenuScreenCodeAlreadyExistsInOriginalTable);
+                }
+            }
+
             int result = await _menuCommandRepository.RollbackMenuByIdAsync(request.Id, cancellationToken);
             if (result == 1)
             {

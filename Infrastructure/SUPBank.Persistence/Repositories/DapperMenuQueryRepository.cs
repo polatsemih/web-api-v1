@@ -44,6 +44,12 @@ namespace SUPBank.Persistence.Repositories
             return await IsExistsAsync("Menu.IsRollbackTokenExistsInMenuH", parameters, cancellationToken);
         }
 
+        public async Task<EntityMenu?> GetMenuScreenCodeByIdAsync(long id, CancellationToken cancellationToken)
+        {
+            var parameters = new { Id = id };
+            return await GetAsync("Menu.GetMenuScreenCodeById", parameters, cancellationToken);
+        }
+
 
         public async Task<IEnumerable<EntityMenu>> GetAllMenusAsync(CancellationToken cancellationToken)
         {
@@ -54,6 +60,12 @@ namespace SUPBank.Persistence.Repositories
         {
             var parameters = new { Id = id };
             return await GetAsync("Menu.GetMenuById", parameters, cancellationToken);
+        }
+
+        public async Task<EntityMenu?> GetMenuByIdInMenuHAsync(long id, CancellationToken cancellationToken)
+        {
+            var parameters = new { Id = id };
+            return await GetAsync("Menu.GetMenuByIdInMenuH", parameters, cancellationToken);
         }
 
         public async Task<IEnumerable<EntityMenu>> GetMenuByIdWithSubMenusAsync(long id, CancellationToken cancellationToken)

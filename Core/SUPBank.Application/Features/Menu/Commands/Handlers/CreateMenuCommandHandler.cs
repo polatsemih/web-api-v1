@@ -29,6 +29,11 @@ namespace SUPBank.Application.Features.Menu.Commands.Handlers
                 return new BadRequestResponse(ResultMessages.MenuParentIdNotExist);
             }
 
+            if (request.ScreenCode.HasValue && await _menuQueryRepository.IsScreenCodeExistsInMenuAsync(request.ScreenCode.Value, cancellationToken))
+            {
+                return new BadRequestResponse(ResultMessages.MenuScreenCodeAlreadyExists);
+            }
+
             EntityMenu menu = _mapper.Map<EntityMenu>(request);
 
             long? menuId = await _menuCommandRepository.CreateMenuAndGetIdAsync(menu, cancellationToken);

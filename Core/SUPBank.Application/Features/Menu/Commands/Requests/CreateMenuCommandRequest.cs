@@ -19,7 +19,11 @@ namespace SUPBank.Application.Features.Menu.Commands.Requests
         public required string Name_EN { get; set; }
 
         [Range(LengthLimits.MenuScreenCodeMinRange, int.MaxValue)]
-        public required int ScreenCode { get; set; }
+        public int? ScreenCode { get; set; }
+
+        [MinLength(LengthLimits.MenuWebURLMinLength)]
+        [MaxLength(LengthLimits.MenuWebURLMaxLength)]
+        public required string WebURL { get; set; }
 
         [Range(1, byte.MaxValue)]
         public required byte Type { get; set; }
@@ -27,9 +31,14 @@ namespace SUPBank.Application.Features.Menu.Commands.Requests
         [Range(1, int.MaxValue)]
         public required int Priority { get; set; }
 
+        public required bool IsSearch { get; set; }
+
         [MinLength(LengthLimits.MenuKeywordMinLength)]
         [MaxLength(LengthLimits.MenuKeywordMaxLength)]
         public required string Keyword { get; set; }
+
+        [Range(1, int.MaxValue)]
+        public required int Authority { get; set; }
 
         [MinLength(LengthLimits.MenuIconMinLength)]
         [MaxLength(LengthLimits.MenuIconMaxLength)]

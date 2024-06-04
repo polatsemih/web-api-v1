@@ -33,6 +33,15 @@ namespace SUPBank.Application.Features.Menu.Commands.Handlers
                 return new BadRequestResponse(ResultMessages.MenuParentIdNotExist);
             }
 
+            if (request.ScreenCode != null)
+            {
+                var menuScreenCode = await _menuQueryRepository.GetMenuScreenCodeByIdAsync(request.Id, cancellationToken);
+                if (menuScreenCode != null && menuScreenCode.ScreenCode.HasValue && menuScreenCode.ScreenCode != request.ScreenCode && await _menuQueryRepository.IsScreenCodeExistsInMenuAsync(request.ScreenCode.Value, cancellationToken))
+                {
+                    return new BadRequestResponse(ResultMessages.MenuScreenCodeAlreadyExists);
+                }
+            }
+
             EntityMenu menu = _mapper.Map<EntityMenu>(request);
 
             int result = await _menuCommandRepository.UpdateMenuAsync(menu, cancellationToken);
