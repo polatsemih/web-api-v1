@@ -42,7 +42,7 @@ namespace SUPBank.Api.Controllers.V3
         {
             // Check the cache first if it exists
             var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
-            if (cachedMenus != null)
+            if (cachedMenus != null && cachedMenus.Count != 0)
             {
                 return StatusCode(StatusCodes.Status200OK, new OkDataResponse<List<EntityMenu>>(cachedMenus));
             }
@@ -82,7 +82,7 @@ namespace SUPBank.Api.Controllers.V3
 
             // Check the cache first if it exists
             var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
-            if (cachedMenus != null)
+            if (cachedMenus != null && cachedMenus.Count != 0)
             {
                 // Filter menu by ID from cache
                 var filteredMenu = _menuService.FilterRecursiveMenuById(cachedMenus, request.Id);
@@ -117,7 +117,7 @@ namespace SUPBank.Api.Controllers.V3
 
             // Check the cache first if it exists
             var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
-            if (cachedMenus != null)
+            if (cachedMenus != null && cachedMenus.Count != 0)
             {
                 // Filter menu by Id from cache
                 var filteredMenu = _menuService.FilterRecursiveMenuByIdWithSubMenus(cachedMenus, request.Id);
@@ -159,11 +159,11 @@ namespace SUPBank.Api.Controllers.V3
 
             // Check the cache first if it exists
             var cachedMenus = await _cacheService.GetCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
-            if (cachedMenus != null)
+            if (cachedMenus != null && cachedMenus.Count != 0)
             {
                 // Filter menu by Keyword from cache
                 var filteredMenus = _menuService.FilterRecursiveMenusByKeyword(cachedMenus, request.Keyword);
-                if (filteredMenus != null)
+                if (filteredMenus != null && filteredMenus.Count != 0)
                 {
                     return StatusCode(StatusCodes.Status200OK, new OkDataResponse<List<EntityMenu>>(filteredMenus));
                 }
@@ -191,7 +191,7 @@ namespace SUPBank.Api.Controllers.V3
             }
 
             // Remove the cache
-            if (await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu))
+            if (await _cacheService.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
             {
                 return StatusCode(StatusCodes.Status200OK, new OkResponse(ResultMessages.MenuCacheRemoved));
             }
@@ -223,7 +223,7 @@ namespace SUPBank.Api.Controllers.V3
             if (result.Status == StatusCodes.Status200OK && result is IDataResponse<long> dataResult && dataResult != null)
             {
                 // If menu creation is successful, remove the menu cache
-                await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu);
+                await _cacheService.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
             }
             return StatusCode(result.Status, result);
         }
@@ -250,7 +250,7 @@ namespace SUPBank.Api.Controllers.V3
             if (result.Status == StatusCodes.Status200OK)
             {
                 // If menu update is successful, remove the menu cache
-                await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu);
+                await _cacheService.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
             }
             return StatusCode(result.Status, result);
         }
@@ -277,7 +277,7 @@ namespace SUPBank.Api.Controllers.V3
             if (result.Status == StatusCodes.Status200OK)
             {
                 // If menu deletion is successful, remove the menu cache
-                await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu);
+                await _cacheService.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu);
             }
             return StatusCode(result.Status, result);
         }

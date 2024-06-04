@@ -16,6 +16,10 @@
         public const string MenuNameMinLength = "Menu Name must be at least {0} characters long";
         public const string MenuNameMaxLength = "Menu Name cannot exceed {0} characters";
 
+        public const string MenuWebURLEmpty = "Menu WebURL cannot be empty";
+        public const string MenuWebURLMinLength = "Menu WebURL must be at least {0} characters long";
+        public const string MenuWebURLMaxLength = "Menu WebURL cannot exceed {0} characters";
+
         public const string MenuScreenCodeEmpty = "Menu ScreenCode cannot be empty.";
         public const string MenuScreenCodeMinRange = "Menu ScreenCode must be greater than {0}";
 
@@ -24,9 +28,14 @@
         public const string MenuPriorityNull = "Menu Priority cannot be null";
         public const string MenuPriorityPositiveOrZero = "Menu Priority must be greater than or equal to 0";
 
+        public const string MenuIsSearchNull = "Menu IsSearch cannot be null";
+
         public const string MenuKeywordEmpty = "Menu Keyword cannot be empty";
         public const string MenuKeywordMinLength = "Menu Keyword must be at least {0} characters long";
         public const string MenuKeywordMaxLength = "Menu Keyword cannot exceed {0} characters";
+
+        public const string MenuAuthorityNull = "Menu Authority cannot be null";
+        public const string MenuAuthorityPositiveOrZero = "Menu Authority must be greater than or equal to 0";
 
         public const string MenuIconEmpty = "Menu Icon cannot be empty";
         public const string MenuIconMinLength = "Menu Icon must be at least {0} characters long";

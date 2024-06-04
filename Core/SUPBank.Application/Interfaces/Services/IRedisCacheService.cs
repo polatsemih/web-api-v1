@@ -44,13 +44,13 @@
         /// </summary>
         /// <param name="key">The key used to identify the item in the cache.</param>
         /// <returns>True if the item was successfully removed from the cache; otherwise, false.</returns>
-        public bool RemoveCache(string key);
+        public bool RemoveCache<T>(string key);
 
         /// <summary>
         /// Asynchronously removes the item with the specified key from the cache.
         /// </summary>
         /// <param name="key">The key used to identify the item in the cache.</param>
         /// <returns>The task representing the asynchronous operation, containing a Boolean value indicating whether the item was successfully removed from the cache.</returns>
-        public Task<bool> RemoveCacheAsync(string key);
+        public Task<bool> RemoveCacheAsync<T>(string key);
     }
 }

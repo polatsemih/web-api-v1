@@ -614,9 +614,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                 Name_TR = "MenuName_TR",
                 Name_EN = "MenuName_EN",
                 ScreenCode = 100000,
+                WebURL = "MenuWebURL",
                 Type = 10,
                 Priority = 100,
+                IsSearch = true,
                 Keyword = "Keyword",
+                Authority = 10,
                 Icon = "Icon",
                 IsGroup = true,
                 IsNew = true,
@@ -653,9 +656,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                 Name_TR = "TestMenu_TR",
                 Name_EN = "TestMenu_EN",
                 ScreenCode = 100000,
+                WebURL = "MenuWebURL",
                 Type = 10,
                 Priority = 100,
+                IsSearch = true,
                 Keyword = "Keyword",
+                Authority = 10,
                 Icon = "Icon",
                 IsGroup = true,
                 IsNew = true,
@@ -692,6 +698,58 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
         }
 
         [Fact]
+        public async Task Create_ShouldReturnBadRequest_WhenGivenScreenCodeAlreadyExists()
+        {
+            // Arrange Data
+            var request = new CreateMenuCommandRequest
+            {
+                ParentId = 1,
+                Name_TR = "TestMenu_TR",
+                Name_EN = "TestMenu_EN",
+                ScreenCode = 100000,
+                WebURL = "MenuWebURL",
+                Type = 10,
+                Priority = 100,
+                IsSearch = true,
+                Keyword = "Keyword",
+                Authority = 10,
+                Icon = "Icon",
+                IsGroup = true,
+                IsNew = true,
+                NewStartDate = DateTime.Now,
+                NewEndDate = DateTime.Now.AddDays(1),
+                IsActive = true
+            };
+            var expectedErrorMessage = null as string;
+            var mediatorResponse = new BadRequestResponse(ResultMessages.MenuScreenCodeAlreadyExists);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuAsync(request.ScreenCode.Value, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(false);
+
+            // Act
+            var objectResult = await _controller.Create(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(ResultMessages.MenuScreenCodeAlreadyExists, result.Message);
+        }
+
+        [Fact]
         public async Task Create_ShouldReturnInternalServerError_WhenMenuIsNotCreated()
         {
             // Arrange Data
@@ -701,9 +759,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                 Name_TR = "TestMenu_TR",
                 Name_EN = "TestMenu_EN",
                 ScreenCode = 100000,
+                WebURL = "MenuWebURL",
                 Type = 10,
                 Priority = 100,
+                IsSearch = true,
                 Keyword = "Keyword",
+                Authority = 10,
                 Icon = "Icon",
                 IsGroup = true,
                 IsNew = true,
@@ -721,6 +782,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                          .ReturnsAsync(mediatorResponse);
             Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
             _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuAsync(request.ScreenCode.Value, It.IsAny<CancellationToken>())).ReturnsAsync(false);
             _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
                              .ReturnsAsync(false);
 
@@ -749,9 +811,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                 Name_TR = "TestMenu_TR",
                 Name_EN = "TestMenu_EN",
                 ScreenCode = 100000,
+                WebURL = "MenuWebURL",
                 Type = 10,
                 Priority = 100,
+                IsSearch = true,
                 Keyword = "Keyword",
+                Authority = 10,
                 Icon = "Icon",
                 IsGroup = true,
                 IsNew = true,
@@ -771,6 +836,7 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                          .ReturnsAsync(mediatorResponse);
             Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
             _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuAsync(request.ScreenCode.Value, It.IsAny<CancellationToken>())).ReturnsAsync(false);
             Mock<IMapper> _mapperMock = new();
             _mapperMock.Setup(m => m.Map<EntityMenu>(request)).Returns(menu);
             Mock<IMenuCommandRepository> _menuCommandRepository = new();
@@ -809,9 +875,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                 Name_TR = "MenuName_TR",
                 Name_EN = "MenuName_EN",
                 ScreenCode = 100000,
+                WebURL = "MenuWebURL",
                 Type = 10,
                 Priority = 100,
+                IsSearch = true,
                 Keyword = "Keyword",
+                Authority = 10,
                 Icon = "Icon",
                 IsGroup = true,
                 IsNew = true,
@@ -849,9 +918,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                 Name_TR = "TestMenu_TR",
                 Name_EN = "TestMenu_EN",
                 ScreenCode = 100000,
+                WebURL = "MenuWebURL",
                 Type = 10,
                 Priority = 100,
+                IsSearch = true,
                 Keyword = "Keyword",
+                Authority = 10,
                 Icon = "Icon",
                 IsGroup = true,
                 IsNew = true,
@@ -898,9 +970,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                 Name_TR = "TestMenu_TR",
                 Name_EN = "TestMenu_EN",
                 ScreenCode = 100000,
+                WebURL = "MenuWebURL",
                 Type = 10,
                 Priority = 100,
+                IsSearch = true,
                 Keyword = "Keyword",
+                Authority = 10,
                 Icon = "Icon",
                 IsGroup = true,
                 IsNew = true,
@@ -938,6 +1013,65 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
         }
 
         [Fact]
+        public async Task Update_ShouldReturnBadRequest_WhenGivenScreenCodeAlreadyExists()
+        {
+            // Arrange Data
+            var request = new UpdateMenuCommandRequest
+            {
+                Id = 1,
+                ParentId = 1,
+                Name_TR = "TestMenu_TR",
+                Name_EN = "TestMenu_EN",
+                ScreenCode = 100000,
+                WebURL = "MenuWebURL",
+                Type = 10,
+                Priority = 100,
+                IsSearch = true,
+                Keyword = "Keyword",
+                Authority = 10,
+                Icon = "Icon",
+                IsGroup = true,
+                IsNew = true,
+                NewStartDate = DateTime.Now,
+                NewEndDate = DateTime.Now.AddDays(1),
+                IsActive = true
+            };
+            var expectedErrorMessage = null as string;
+            var menuWithScreenCode = new EntityMenu()
+            {
+                ScreenCode = 100001
+            };
+            var mediatorResponse = new BadRequestResponse(ResultMessages.MenuScreenCodeAlreadyExists);
+
+            // Arrange Service
+            ControllerTestHelper.SetupValidationService(_validationServiceMock, request, expectedErrorMessage);
+            // ControllerTestHelper.SetupMediator(_mediatorMock, request, mediatorResponse);
+            _mediatorMock.Setup(m => m.Send(request, It.IsAny<CancellationToken>()))
+                         .ReturnsAsync(mediatorResponse);
+            Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
+            _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _menuQueryRepositoryMock.Setup(m => m.GetMenuScreenCodeByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(menuWithScreenCode);
+            _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuAsync(menuWithScreenCode.ScreenCode.Value, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _cacheServiceMock.Setup(c => c.RemoveCacheAsync(Cache.CacheKeyMenu))
+                             .ReturnsAsync(false);
+
+            // Act
+            var objectResult = await _controller.Update(request) as ObjectResult;
+
+            // Assert Result
+            Assert.NotNull(objectResult);
+            Assert.Equal(StatusCodes.Status400BadRequest, objectResult.StatusCode);
+
+            // Assert Data Result
+            var result = objectResult.Value as BadRequestResponse;
+            Assert.NotNull(result);
+            Assert.Equal(StatusCodes.Status400BadRequest, result.Status);
+
+            Assert.Equal(ResultMessages.MenuScreenCodeAlreadyExists, result.Message);
+        }
+
+        [Fact]
         public async Task Update_ShouldReturnOk_WhenMenuIsNotUpdated()
         {
             // Arrange Data
@@ -948,9 +1082,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                 Name_TR = "TestMenu_TR",
                 Name_EN = "TestMenu_EN",
                 ScreenCode = 100000,
+                WebURL = "MenuWebURL",
                 Type = 10,
                 Priority = 100,
+                IsSearch = true,
                 Keyword = "Keyword",
+                Authority = 10,
                 Icon = "Icon",
                 IsGroup = true,
                 IsNew = true,
@@ -959,6 +1096,10 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                 IsActive = true
             };
             var expectedErrorMessage = null as string;
+            var menuWithScreenCode = new EntityMenu()
+            {
+                ScreenCode = 100001
+            };
             var menu = new EntityMenu();
             var mediatorResponse = new OkResponse(ResultMessages.MenuUpdateNoChanges);
 
@@ -970,6 +1111,8 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
             Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
             _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
             _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _menuQueryRepositoryMock.Setup(m => m.GetMenuScreenCodeByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(menuWithScreenCode);
+            _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuAsync(menuWithScreenCode.ScreenCode.Value, It.IsAny<CancellationToken>())).ReturnsAsync(false);
             Mock<IMapper> _mapperMock = new();
             _mapperMock.Setup(m => m.Map<EntityMenu>(request)).Returns(menu);
             Mock<IMenuCommandRepository> _menuCommandRepository = new();
@@ -1002,10 +1145,12 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                 ParentId = 0,
                 Name_TR = "TestMenu_TR",
                 Name_EN = "TestMenu_EN",
-                ScreenCode = 100000,
+                WebURL = "MenuWebURL",
                 Type = 10,
                 Priority = 100,
+                IsSearch = true,
                 Keyword = "Keyword",
+                Authority = 10,
                 Icon = "Icon",
                 IsGroup = true,
                 IsNew = true,
@@ -1014,6 +1159,10 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
                 IsActive = true
             };
             var expectedErrorMessage = null as string;
+            var menuWithScreenCode = new EntityMenu()
+            {
+                ScreenCode = 100001
+            };
             var menu = new EntityMenu();
             var mediatorResponse = new OkResponse(ResultMessages.MenuUpdateSuccess);
 
@@ -1025,6 +1174,8 @@ namespace SUPBank.UnitTests.xUnit.Presantation.Api.V3
             Mock<IMenuQueryRepository> _menuQueryRepositoryMock = new();
             _menuQueryRepositoryMock.Setup(m => m.IsIdExistsInMenuAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(true);
             _menuQueryRepositoryMock.Setup(m => m.IsParentIdExistsInMenuAsync(request.ParentId, It.IsAny<CancellationToken>())).ReturnsAsync(true);
+            _menuQueryRepositoryMock.Setup(m => m.GetMenuScreenCodeByIdAsync(request.Id, It.IsAny<CancellationToken>())).ReturnsAsync(menuWithScreenCode);
+            _menuQueryRepositoryMock.Setup(m => m.IsScreenCodeExistsInMenuAsync(menuWithScreenCode.ScreenCode.Value, It.IsAny<CancellationToken>())).ReturnsAsync(false);
             Mock<IMapper> _mapperMock = new();
             _mapperMock.Setup(m => m.Map<EntityMenu>(request)).Returns(menu);
             Mock<IMenuCommandRepository> _menuCommandRepository = new();

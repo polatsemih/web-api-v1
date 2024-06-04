@@ -20,7 +20,12 @@
         /// <summary>
         /// Screen code associated with the menu item. The code must be within the range starting from 10000.
         /// </summary>
-        public int ScreenCode { get; set; }
+        public int? ScreenCode { get; set; }
+
+        /// <summary>
+        /// URL of the web resource associated with the menu item
+        /// </summary>
+        public string WebURL { get; set; } = string.Empty;
 
         /// <summary>
         /// Type of the menu item (e.g., profile menu = 10, my world menu = 20, all transactions = 30)
@@ -33,9 +38,19 @@
         public int Priority { get; set; }
 
         /// <summary>
+        /// Indicates if the menu item is related to search functionality (1 for true, 0 for false)
+        /// </summary>
+        public bool IsSearch { get; set; }
+
+        /// <summary>
         /// Keyword associated with the menu item for searching
         /// </summary>
         public string Keyword { get; set; } = string.Empty;
+
+        /// <summary>
+        /// Authority level required to access the menu item
+        /// </summary>
+        public int Authority { get; set; }
 
         /// <summary>
         /// Path to the icon associated with the menu item

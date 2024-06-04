@@ -6,6 +6,9 @@
         public const int MenuNameMinLength = 2;
         public const int MenuNameMaxLength = 100;
 
+        public const int MenuWebURLMinLength = 2;
+        public const int MenuWebURLMaxLength = 100;
+
         public const int MenuScreenCodeMinRange = 10000;
 
         public const int MenuKeywordMinLength = 2;

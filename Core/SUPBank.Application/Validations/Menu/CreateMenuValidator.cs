@@ -12,9 +12,12 @@ namespace SUPBank.Application.Validations.Menu
             RuleFor(r => r.Name_TR).ValidateMenuName();
             RuleFor(r => r.Name_EN).ValidateMenuName();
             RuleFor(r => r.ScreenCode).ValidateMenuScreenCode();
+            RuleFor(r => r.WebURL).ValidateMenuWebURL();
             RuleFor(r => r.Type).ValidateMenuType();
             RuleFor(r => r.Priority).ValidateMenuPriority();
+            RuleFor(r => r.IsSearch).ValidateMenuIsSearch();
             RuleFor(r => r.Keyword).ValidateMenuKeyword();
+            RuleFor(r => r.Authority).ValidateMenuAuthority();
             RuleFor(r => r.Icon).ValidateMenuIcon();
             RuleFor(r => r.IsGroup).ValidateMenuIsGroup();
             RuleFor(r => r.IsNew).ValidateMenuIsNew();

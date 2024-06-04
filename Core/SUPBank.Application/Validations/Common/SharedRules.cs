@@ -9,7 +9,7 @@ namespace SUPBank.Application.Validations.Common
         {
             return ruleBuilder
                 .NotEmpty().WithMessage(ValidationMessages.IdEmpty)
-                 .GreaterThan(0).WithMessage(ValidationMessages.IdPositive);
+                .GreaterThan(0).WithMessage(ValidationMessages.IdPositive);
         }
 
         public static IRuleBuilderOptions<T, bool> ValidateIsActive<T>(this IRuleBuilder<T, bool> ruleBuilder)

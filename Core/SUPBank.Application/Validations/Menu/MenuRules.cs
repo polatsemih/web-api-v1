@@ -21,11 +21,25 @@ namespace SUPBank.Application.Validations.Menu
                 .MaximumLength(LengthLimits.MenuNameMaxLength).WithMessage(string.Format(ValidationMessages.MenuNameMaxLength, LengthLimits.MenuNameMaxLength));
         }
 
-        public static IRuleBuilderOptions<T, int> ValidateMenuScreenCode<T>(this IRuleBuilder<T, int> ruleBuilder)
+        public static IRuleBuilderOptions<T, int?> ValidateMenuScreenCode<T>(this IRuleBuilder<T, int?> ruleBuilder)
+        {
+            return ruleBuilder
+                .GreaterThan(LengthLimits.MenuScreenCodeMinRange).When(screenCode => screenCode != null).WithMessage(string.Format(ValidationMessages.MenuScreenCodeMinRange, LengthLimits.MenuScreenCodeMinRange));
+        }
+
+        public static IRuleBuilderOptions<T, int> ValidateMenuScreenCodeRequired<T>(this IRuleBuilder<T, int> ruleBuilder)
         {
             return ruleBuilder
                 .NotEmpty().WithMessage(ValidationMessages.MenuScreenCodeEmpty)
                 .GreaterThan(LengthLimits.MenuScreenCodeMinRange).WithMessage(string.Format(ValidationMessages.MenuScreenCodeMinRange, LengthLimits.MenuScreenCodeMinRange));
+        }
+
+        public static IRuleBuilderOptions<T, string> ValidateMenuWebURL<T>(this IRuleBuilder<T, string> ruleBuilder)
+        {
+            return ruleBuilder
+                .NotEmpty().WithMessage(ValidationMessages.MenuWebURLEmpty)
+                .MinimumLength(LengthLimits.MenuWebURLMinLength).WithMessage(string.Format(ValidationMessages.MenuWebURLMinLength, LengthLimits.MenuWebURLMinLength))
+                .MaximumLength(LengthLimits.MenuWebURLMaxLength).WithMessage(string.Format(ValidationMessages.MenuWebURLMaxLength, LengthLimits.MenuWebURLMaxLength));
         }
 
         public static IRuleBuilderOptions<T, byte> ValidateMenuType<T>(this IRuleBuilder<T, byte> ruleBuilder)
@@ -40,13 +54,26 @@ namespace SUPBank.Application.Validations.Menu
                 .NotNull().WithMessage(ValidationMessages.MenuPriorityNull)
                 .GreaterThanOrEqualTo(0).WithMessage(ValidationMessages.MenuPriorityPositiveOrZero);
         }
-        
+
+        public static IRuleBuilderOptions<T, bool> ValidateMenuIsSearch<T>(this IRuleBuilder<T, bool> ruleBuilder)
+        {
+            return ruleBuilder
+                .NotNull().WithMessage(ValidationMessages.MenuIsSearchNull);
+        }
+
         public static IRuleBuilderOptions<T, string> ValidateMenuKeyword<T>(this IRuleBuilder<T, string> ruleBuilder)
         {
             return ruleBuilder
                 .NotEmpty().WithMessage(ValidationMessages.MenuKeywordEmpty)
                 .MinimumLength(LengthLimits.MenuKeywordMinLength).WithMessage(string.Format(ValidationMessages.MenuKeywordMinLength, LengthLimits.MenuKeywordMinLength))
                 .MaximumLength(LengthLimits.MenuKeywordMaxLength).WithMessage(string.Format(ValidationMessages.MenuKeywordMaxLength, LengthLimits.MenuKeywordMaxLength));
+        }
+
+        public static IRuleBuilderOptions<T, int> ValidateMenuAuthority<T>(this IRuleBuilder<T, int> ruleBuilder)
+        {
+            return ruleBuilder
+                .NotNull().WithMessage(ValidationMessages.MenuAuthorityNull)
+                .GreaterThanOrEqualTo(0).WithMessage(ValidationMessages.MenuAuthorityPositiveOrZero);
         }
 
         public static IRuleBuilderOptions<T, string?> ValidateMenuIcon<T>(this IRuleBuilder<T, string?> ruleBuilder)

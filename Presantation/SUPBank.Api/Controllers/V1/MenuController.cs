@@ -190,7 +190,7 @@ namespace SUPBank.Api.Controllers.V1
             }
 
             // Remove the cache
-            if (await _cacheService.RemoveCacheAsync(Cache.CacheKeyMenu))
+            if (await _cacheService.RemoveCacheAsync<List<EntityMenu>>(Cache.CacheKeyMenu))
             {
                 return StatusCode(StatusCodes.Status200OK, new OkResponse(ResultMessages.MenuCacheRemoved));
             }
