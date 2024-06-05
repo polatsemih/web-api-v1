@@ -1,7 +1,6 @@
 ﻿using StackExchange.Redis;
 using SUPBank.Application.Interfaces.Services;
 using SUPBank.Domain.Contstants;
-using SUPBank.Domain.Entities;
 
 namespace SUPBank.Infrastructure.Services
 {

@@ -22,7 +22,7 @@ namespace SUPBank.Application.Features.Menu.Queries.Handlers
         {
             if (!await _menuQueryRepository.IsIdExistsInMenuAsync(request.Id, cancellationToken))
             {
-                return new BadRequestResponse(ResultMessages.MenuIdNotExist);
+                return new NotFoundResponse(ResultMessages.MenuIdNotExist);
             }
 
             var result = await _menuQueryRepository.GetMenuByIdWithSubMenusAsync(request.Id, cancellationToken);
