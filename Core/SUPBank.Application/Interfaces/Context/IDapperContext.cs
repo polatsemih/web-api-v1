@@ -10,6 +10,6 @@ namespace SUPBank.Application.Interfaces.Context
 
         public T Query<T>(Func<SqlConnection, T> query);
         public Task<T> QueryAsync<T>(Func<SqlConnection, Task<T>> query);
-        public Task<T> QueryAsync<T>(Func<SqlConnection, Task<T>> query, CancellationToken cancellationToken);
+        public Task<T> QueryAsync<T>(Func<SqlConnection, SqlTransaction, Task<T>> query, CancellationToken cancellationToken);
     }
 }

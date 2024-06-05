@@ -136,31 +136,38 @@ namespace SUPBank.Persistence.Context
             }
         }
 
-        public async Task<T> QueryAsync<T>(Func<SqlConnection, Task<T>> query, CancellationToken cancellationToken)
+        public async Task<T> QueryAsync<T>(Func<SqlConnection, SqlTransaction, Task<T>> query, CancellationToken cancellationToken)
         {
+            await using SqlConnection connection = GetConnection();
+            await connection.OpenAsync(cancellationToken);
+
+            await using var transaction = (SqlTransaction)await connection.BeginTransactionAsync(cancellationToken);
+
             try
             {
                 cancellationToken.ThrowIfCancellationRequested();
+                T result = await query(connection, transaction);
 
-                await using SqlConnection connection = GetConnection();
-                await connection.OpenAsync(cancellationToken);
+                await transaction.CommitAsync(cancellationToken);
 
-                cancellationToken.ThrowIfCancellationRequested();
-                return await query(connection);
+                return result;
             }
             catch (OperationCanceledException ex)
             {
                 _logger.LogInformation($"{ExceptionMessages.OperationCanceledException}: {ex.Message}");
+                await transaction.RollbackAsync(cancellationToken);
                 throw;
             }
             catch (SqlException ex)
             {
                 _logger.LogError(ExceptionMessages.SqlException, ex);
+                await transaction.RollbackAsync(cancellationToken);
                 throw;
             }
             catch (Exception ex)
             {
                 _logger.LogError(ExceptionMessages.Exception, ex);
+                await transaction.RollbackAsync(cancellationToken);
                 throw;
             }
         }
