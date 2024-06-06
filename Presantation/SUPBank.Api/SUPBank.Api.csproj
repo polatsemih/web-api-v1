@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\Core\SUPBank.Application\SUPBank.Application.csproj" />
-    <ProjectReference Include="..\..\Core\SUPBank.Domain\SUPBank.Domain.csproj" />
     <ProjectReference Include="..\..\Infrastructure\SUPBank.Infrastructure\SUPBank.Infrastructure.csproj" />
     <ProjectReference Include="..\..\Infrastructure\SUPBank.Persistence\SUPBank.Persistence.csproj" />
   </ItemGroup>
